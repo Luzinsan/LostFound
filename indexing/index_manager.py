@@ -226,7 +226,9 @@ class IndexManager:
         city_index = self.city_indexes[city_name]
         inverted_index = city_index["inverted_index"]
         results = defaultdict(float)
-        tokens = self._tokenize(query)
+        # tokens = self._tokenize(query)
+        wildcard_handler = WildcardHandler(city_index['terms_lexicon'])
+        tokens = wildcard_handler.process_query(query)
         for token in tokens:
             if token in inverted_index:
                 for doc_id in inverted_index[token]:
