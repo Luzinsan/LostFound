@@ -36,7 +36,7 @@ if not os.path.exists(os.path.join(config.AGGREGATED_DIR, "city_indexes")): # Cr
 def main():
     # Check for '--load-only' flag to bypass re-parsing
     load_only = '--load-only' in sys.argv
-    # load_only = True # For testing load only mode
+    load_only = False # For testing load only mode
     aggregated_filename = os.path.join(config.AGGREGATED_DIR, "all_places_aggregated.json")
     all_data = {}
 

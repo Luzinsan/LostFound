@@ -114,8 +114,6 @@ class IndexManager:
             if sections:
                 flattened = self._flatten_sections(sections)
                 content.extend(flattened)
-        if description := attraction_data.get('description'): # OpenTripMap description
-            content.append(description)
         return " ".join(content)
 
     def _flatten_sections(self, sections: Any) -> List[str]:
