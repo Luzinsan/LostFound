@@ -38,7 +38,7 @@ class CompositeAggregator:
         wiki_data = self.wikipedia_parser.parse(place, checkpoint=True)
         data["wikipedia"] = wiki_data if wiki_data else None
 
-        otm_data = self.otm_parser.parse(place)
+        otm_data = self.otm_parser.parse(place, radius=10000)
         data["otm"] = otm_data if otm_data else []
 
         self.index[normalized_place] = data
@@ -52,9 +52,9 @@ class CompositeAggregator:
             logging.error(f"[Aggregate] Error saving data for '{place}': {e}")
         return data
 
-    def search(self, query: str) -> List[tuple]:
+    def search(self, city_name: str, query: str) -> List[tuple]:
         """
         Delegates search to the IndexManager.
-        Returns a list of tuples (doc_id, score) sorted by descending score.
+        Returns a list of tuples (name_attraction, score) sorted by descending score.
         """
-        return self.index_manager.search(query)
+        return self.index_manager.search(city_name, query)

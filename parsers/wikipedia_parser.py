@@ -17,8 +17,7 @@ class WikipediaParser(BaseParser):
     def parse_sections(self, sections):
         sub_sections = {}
         for s in sections:
-            sub_sections[s.title] = self.parse_sections(s.sections) if s.sections else s.text[:30]
-        
+            sub_sections[s.title] = self.parse_sections(s.sections) if s.sections else s.text[:]
         return sub_sections
 
     def parse(self, place: str, 
@@ -32,7 +31,7 @@ class WikipediaParser(BaseParser):
             wiki_data = {
                 "url": page.fullurl,
                 "title": page.title,
-                "summary": page.summary[:30],
+                "summary": page.summary[:],
                 "sections": self.parse_sections(page.sections),
             }
             if checkpoint:

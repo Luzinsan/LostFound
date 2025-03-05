@@ -2,8 +2,9 @@ import json
 import logging
 import re
 import math
+import os
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from config import AGGREGATED_DIR, PLACES
 from utils.file_utils import normalize_filename
@@ -12,82 +13,109 @@ from nltk.stem.snowball import SnowballStemmer
 
 class IndexManager:
     """
-    Manages the construction and searching of an inverted index.
+    Manages the construction and searching of inverted indexes, now city-specific.
     Handles tokenization, stemming (using SnowballStemmer for Russian),
-    TF-IDF scoring, and lexicon building.
+    TF-IDF scoring, and lexicon building for each city separately.
     """
     def __init__(self):
-        self.inverted_index = defaultdict(dict)
-        self.doc_freq = defaultdict(int)
-        self.total_docs = 0
-        self.terms_lexicon = set()
-        self.wildcard_handler = None
-        self.term_kgrams = defaultdict(set)
+        self.city_indexes = {} # Dictionary to hold indexes for each city
         self.stemmer = SnowballStemmer("russian")
-        self.index_file = f"{AGGREGATED_DIR}/index.json"
 
     def _tokenize(self, text: str) -> List[str]:
-        # Supports Cyrillic and Latin; returns stemmed tokens.
+        """
+        Tokenizes text, supports Cyrillic and Latin, and applies stemming.
+        """
         tokens = re.findall(r'\b[а-яёa-z]+\b', text.lower())
         return [self._stem(token) for token in tokens if token and token not in self._stop_words()]
 
     def _stem(self, word: str) -> str:
+        """
+        Applies stemming to a word using SnowballStemmer for Russian.
+        """
         return self.stemmer.stem(word)
 
     def _stop_words(self) -> set:
-        # Basic Russian stop words (expandable as needed)
-        return {'и', 'в', 'во', 'не', 'что', 'он', 'на', 'я', 'с', 'со', 'как', 'а', 
-                'то', 'все', 'она', 'так', 'его', 'но', 'да', 'ты', 'к', 'у', 'же', 
+        """
+        Returns a set of basic Russian stop words. Expandable as needed.
+        """
+        return {'и', 'в', 'во', 'не', 'что', 'он', 'на', 'я', 'с', 'со', 'как', 'а',
+                'то', 'все', 'она', 'так', 'его', 'но', 'да', 'ты', 'к', 'у', 'же',
                 'вы', 'за', 'бы', 'по', 'ее', 'мне'}
 
-    def build_index(self, doc_id: str, content: str):
+    def build_index(self, city_name: str, doc_id: str, content: str):
         """
-        Builds the inverted index for a single document.
+        Builds the inverted index for a single document within a specific city.
         """
+        if city_name not in self.city_indexes:
+            self.city_indexes[city_name] = {
+                "inverted_index": defaultdict(dict),
+                "doc_freq": defaultdict(int),
+                "total_docs": 0,
+                "terms_lexicon": set(),
+                "wildcard_handler": None,
+                "term_kgrams": defaultdict(set)
+            }
+        city_index = self.city_indexes[city_name]
+        inverted_index = city_index["inverted_index"]
+
         tokens = self._tokenize(content)
         tf = defaultdict(int)
         for token in tokens:
             tf[token] += 1
         for token, count in tf.items():
-            self.inverted_index[token][doc_id] = self.inverted_index[token].get(doc_id, 0) + count
-            self.doc_freq[token] = len(self.inverted_index[token])
-        self.total_docs += 1
+            inverted_index[token][doc_id] = inverted_index[token].get(doc_id, 0) + count
+        city_index["total_docs"] += 1
 
-    def _tfidf(self, token: str, doc_id: str) -> float:
-        if self.total_docs == 0:
+
+    def _tfidf(self, city_name: str, token: str, doc_id: str) -> float:
+        """
+        Calculates TF-IDF score for a token in a document within a city.
+        """
+        if city_name not in self.city_indexes:
             return 0.0
-        df = self.doc_freq.get(token, 0)
-        idf = math.log((self.total_docs + 1) / (df + 0.5))
-        tf_val = self.inverted_index.get(token, {}).get(doc_id, 0)
+        city_index = self.city_indexes[city_name]
+        total_docs = city_index["total_docs"]
+        doc_freq = city_index["doc_freq"]
+        inverted_index = city_index["inverted_index"]
+
+        if total_docs == 0:
+            return 0.0
+        df = doc_freq.get(token, 0)
+        idf = math.log((total_docs + 1) / (df + 0.5))
+        tf_val = inverted_index.get(token, {}).get(doc_id, 0)
         return (tf_val / (tf_val + 1.0)) * idf
 
-    def build_lexicon(self):
+    def build_lexicon(self, city_name: str):
         """
-        Builds a lexicon of terms for correction using a k-gram index.
+        Builds a lexicon of terms for correction using a k-gram index for a specific city.
         """
-        self.terms_lexicon = set(self.inverted_index.keys())
-        self.wildcard_handler = WildcardHandler(self.terms_lexicon)
-        for term in self.terms_lexicon:
+        if city_name not in self.city_indexes:
+            return
+        city_index = self.city_indexes[city_name]
+        inverted_index = city_index["inverted_index"]
+
+        city_index["terms_lexicon"] = set(inverted_index.keys())
+        city_index["wildcard_handler"] = WildcardHandler(city_index["terms_lexicon"])
+        term_kgrams = city_index["term_kgrams"]
+        for term in city_index["terms_lexicon"]:
             padded = f"${term}$"
             for i in range(len(padded) - 2):
-                self.term_kgrams[padded[i:i+3]].add(term)
+                term_kgrams[padded[i:i+3]].add(term)
 
-    def get_content_for_indexing(self, data: Dict) -> str:
+    def get_content_for_indexing(self, attraction_data: Dict) -> str:
         """
-        Extracts all text content from aggregated data.
-        Handles Wikipedia data with potentially nested sections.
+        Extracts text content from attraction data for indexing.
         """
         content = []
-        if data.get("wikipedia"):
-            content.append(data["wikipedia"].get("summary", ""))
-            sections = data["wikipedia"].get("sections")
+        content.append(attraction_data.get("name", ""))
+        if attraction_data.get("wikipedia_extracts"):
+            content.append(attraction_data["wikipedia_extracts"].get("summary", ""))
+            sections = attraction_data["wikipedia_extracts"].get("sections")
             if sections:
                 flattened = self._flatten_sections(sections)
                 content.extend(flattened)
-        if data.get("otm"):
-            for item in data["otm"]:
-                content.append(item.get("title", ""))
-                content.append(item.get("description", ""))
+        if description := attraction_data.get('description'): # OpenTripMap description
+            content.append(description)
         return " ".join(content)
 
     def _flatten_sections(self, sections: Any) -> List[str]:
@@ -109,42 +137,100 @@ class IndexManager:
                     texts.extend(self._flatten_sections(item))
         return texts
 
-    def build_and_save_index(self, aggregated_data: Dict[str, Any]):
+    def build_and_save_index(self, city_name: str, aggregated_city_data: Dict[str, Any]):
         """
-        Builds the inverted index from the aggregated data and saves the index to a file.
-        aggregated_data is a dict mapping normalized place to its aggregated data.
+        Builds the inverted index for a specific city from the aggregated data and saves it to a file.
+        aggregated_city_data is the aggregated data for a single city.
         """
-        # Reset index data
-        self.inverted_index = defaultdict(dict)
-        self.doc_freq = defaultdict(int)
-        self.total_docs = 0
-        
-        for doc_id, data in aggregated_data.items():
-            content = self.get_content_for_indexing(data)
-            self.build_index(doc_id, content)
-        self.build_lexicon()
-        
-        index_data = {
-            "inverted_index": self.inverted_index,
-            "doc_freq": self.doc_freq,
-            "total_docs": self.total_docs,
-            "terms_lexicon": list(self.terms_lexicon)
+        logging.info(f"[IndexManager] Building index for city: {city_name}")
+        # Reset index data for this city
+        self.city_indexes[city_name] = {
+            "inverted_index": defaultdict(dict),
+            "doc_freq": defaultdict(int),
+            "total_docs": 0,
+            "terms_lexicon": set(),
+            "wildcard_handler": None,
+            "term_kgrams": defaultdict(set)
         }
-        try:
-            with open(self.index_file, "w", encoding="utf-8") as f:
-                json.dump(index_data, f, ensure_ascii=False, indent=4)
-            logging.info(f"[IndexManager] Index built and saved to {self.index_file}")
-        except Exception as e:
-            logging.error(f"[IndexManager] Error saving index: {e}")
 
-    def search(self, query: str) -> List[tuple]:
+        for attraction_data in aggregated_city_data['otm']:
+            if name_attract := attraction_data.get("name"): # Use name as name_attract
+                content = self.get_content_for_indexing(attraction_data)
+                self.build_index(city_name, name_attract, content)
+            else:
+                logging.warning(f"[IndexManager] Attraction without xid found in {city_name}, skipping.")
+
+        city_index = self.city_indexes[city_name]
+        city_index["doc_freq"] = self._calculate_doc_freq(city_index["inverted_index"]) # Calculate doc_freq after building index
+        self.build_lexicon(city_name)
+
+        index_data = {
+            "inverted_index": city_index["inverted_index"],
+            "doc_freq": city_index["doc_freq"],
+            "total_docs": city_index["total_docs"],
+            "terms_lexicon": list(city_index["terms_lexicon"])
+        }
+        index_dir = os.path.join(AGGREGATED_DIR, "city_indexes")
+        if not os.path.exists(index_dir):
+            os.makedirs(index_dir)
+        index_file = os.path.join(index_dir, f"index_{normalize_filename(city_name)}.json")
+        try:
+            with open(index_file, "w", encoding="utf-8") as f:
+                json.dump(index_data, f, ensure_ascii=False, indent=4)
+            logging.info(f"[IndexManager] Index for {city_name} built and saved to {index_file}")
+        except Exception as e:
+            logging.error(f"[IndexManager] Error saving index for {city_name}: {e}")
+
+    def _calculate_doc_freq(self, inverted_index):
+        """Calculates document frequency for all terms in the inverted index."""
+        doc_freq = defaultdict(int)
+        for term, postings in inverted_index.items():
+            doc_freq[term] = len(postings)
+        return doc_freq
+
+
+    def load_index(self, city_name: str) -> bool:
         """
-        Searches the inverted index for the given query and returns a list of tuples (doc_id, score).
+        Loads the inverted index for a specific city from file.
+        Returns True if loaded successfully, False otherwise.
         """
+        index_dir = os.path.join(AGGREGATED_DIR, "city_indexes")
+        index_file = os.path.join(index_dir, f"index_{normalize_filename(city_name)}.json")
+        if not os.path.exists(index_file):
+            logging.warning(f"[IndexManager] Index file for {city_name} not found: {index_file}")
+            return False
+        try:
+            with open(index_file, "r", encoding="utf-8") as f:
+                index_data = json.load(f)
+            self.city_indexes[city_name] = {
+                "inverted_index": defaultdict(dict, {k: v for k, v in index_data["inverted_index"].items()}), # Convert back to defaultdict
+                "doc_freq": defaultdict(int, index_data["doc_freq"]), # Convert back to defaultdict
+                "total_docs": index_data["total_docs"],
+                "terms_lexicon": set(index_data["terms_lexicon"]),
+                "wildcard_handler": WildcardHandler(set(index_data["terms_lexicon"])), # Rebuild wildcard handler
+                "term_kgrams": defaultdict(set) # k-grams are not saved for now, rebuild if needed for suggestions
+            }
+            logging.info(f"[IndexManager] Index for {city_name} loaded from {index_file}")
+            return True
+        except Exception as e:
+            logging.error(f"[IndexManager] Error loading index for {city_name} from {index_file}: {e}")
+            return False
+
+
+    def search(self, city_name: str, query: str) -> List[tuple]:
+        """
+        Searches the inverted index for the given query within a specific city and returns a list of tuples (doc_id, score).
+        """
+        if city_name not in self.city_indexes or not self.city_indexes[city_name]["inverted_index"]:
+            logging.warning(f"[IndexManager] No index loaded for city: {city_name}. Please load index first.")
+            return []
+
+        city_index = self.city_indexes[city_name]
+        inverted_index = city_index["inverted_index"]
         results = defaultdict(float)
         tokens = self._tokenize(query)
         for token in tokens:
-            if token in self.inverted_index:
-                for doc_id in self.inverted_index[token]:
-                    results[doc_id] += self._tfidf(token, doc_id)
+            if token in inverted_index:
+                for doc_id in inverted_index[token]:
+                    results[doc_id] += self._tfidf(city_name, token, doc_id)
         return sorted(results.items(), key=lambda x: x[1], reverse=True)
