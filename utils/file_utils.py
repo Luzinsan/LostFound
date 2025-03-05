@@ -18,3 +18,12 @@ def save_json(data: Dict[str, Any], filename: str):
         logging.info(f"[Save] Data for '{data.get('place')}' saved to {filename}")
     except Exception as e:
         logging.error(f"[Save] Error saving data to {filename}: {e}")
+
+
+def load_json(filename: str):
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logging.error(f"Error loading JSON from {filename}: {e}")
+        return None

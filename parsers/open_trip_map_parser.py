@@ -7,8 +7,7 @@ from typing import Optional, List, Dict, Any
 from parsers.base_parser import BaseParser
 from utils.file_utils import normalize_filename
 from config import BASE_CHECKPOINT_DIR
-# Import the Yandex Maps Reviews scraper class to link with OpenTripMap results.
-from parsers.yandex_maps_reviews_parser import YandexMapsReviewsParser
+
 
 class OpenTripMapParser(BaseParser):
     """
@@ -17,14 +16,13 @@ class OpenTripMapParser(BaseParser):
       1. Retrieves the city's coordinates using /places/geoname.
       2. Searches for attractions in the specified radius using /places/radius.
       3. For each attraction, fetches detailed information using /places/xid/{xid}.
-      4. Uses YandexMapsReviewsParser to scrape reviews for the attraction from Yandex Maps.
+      4. Will use Google Places API (further) (API key already in the conf.py)
     """
     def __init__(self, api_key: str, base_url: str = "https://api.opentripmap.com/0.1/ru/places", timeout: int = 25):
         self.api_key = api_key
         self.base_url = base_url
         self.timeout = timeout
-        # Instantiate the Yandex Maps Reviews parser.
-        self.yandex_parser = YandexMapsReviewsParser()
+
 
     def parse(self, place: str, radius: int = 10000, limit: int = 50,
               checkpoint: bool = True, checkpoint_dir: str = os.path.join(BASE_CHECKPOINT_DIR, "opentripmap"),
@@ -88,12 +86,6 @@ class OpenTripMapParser(BaseParser):
                 detail_resp = requests.get(detail_url, params=params, timeout=self.timeout)
                 detail_resp.raise_for_status()
                 detail_data = detail_resp.json()
-                # Step 4: Scrape reviews from Yandex Maps for this attraction.
-                attraction_name = detail_data.get("name")
-                if attraction_name:
-                    # Optionally, you can pass point coordinates if available (e.g., detail_data["point"])
-                    reviews = self.yandex_parser.get_reviews(attraction_name, detail_data.get("point", {}))
-                    detail_data["yandex_reviews"] = reviews
                 aggregated_results.append(detail_data)
             except Exception as e:
                 logging.error(f"[Opentripmap] Error obtaining details for xid '{xid}': {e}")

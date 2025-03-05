@@ -1,65 +1,60 @@
-# aggregator/composite_aggregator.py
-
-import json
 import os
+import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
+
+from config import AGGREGATED_DIR, PLACES
 from utils.file_utils import normalize_filename
-from config import AGGREGATED_DIR
+from indexing.index_manager import IndexManager
 
 class CompositeAggregator:
-    def __init__(self,
-                 wikipedia_parser,
-                 otm_parser,
-                #  scraper_parser,
-                #  osm_parser,
-                 data_processor):
+    def __init__(self, wikipedia_parser, otm_parser, data_processor):
         self.wikipedia_parser = wikipedia_parser
         self.otm_parser = otm_parser
-        # self.scraper_parser = scraper_parser
-        # self.osm_parser = osm_parser
         self.data_processor = data_processor
+        self.index_manager = IndexManager()  # IndexManager now handles indexing logic
+        self.index = {}  # Aggregated data storage
 
-    def aggregate(self, place: str, 
-                  flickr_max_pages: Optional[int] = None,
-                  scraper_max_pages: Optional[int] = None) -> Dict[str, Any]:
+    def aggregate(self, place: str, force_parse: bool = False) -> Dict[str, Any]:
+        """
+        Aggregates data for a given place from various sources.
+        Saves the aggregated data in a per-place JSON file.
+        """
         data = {"place": place}
         agg_filename = os.path.join(AGGREGATED_DIR, f"{normalize_filename(place)}.json")
-        if os.path.exists(agg_filename):
-            logging.info(f"[Aggregate] Data for '{place}' already exists in {agg_filename}. Skipping aggregation.")
+        normalized_place = normalize_filename(place)
+
+        if not force_parse and os.path.exists(agg_filename):
+            logging.info(f"[Aggregate] Loading existing data for '{place}' from {agg_filename}")
             try:
                 with open(agg_filename, "r", encoding="utf-8") as f:
                     data = json.load(f)
+                self.index[normalized_place] = data
                 return data
             except Exception as e:
-                logging.error(f"[Aggregate] Error loading existing data for '{place}': {e}")
-        
-        # Wikipedia data
-        wiki_data = self.wikipedia_parser.parse(place, checkpoint=True)
-        if wiki_data:
-            data["wikipedia"] = wiki_data
-            # interesting_facts = self.data_processor.process_text(wiki_data.get("summary", ""))
-            # data["interesting_facts"] = interesting_facts
-        else:
-            data["wikipedia"] = None
-            # data["interesting_facts"] = []
-        
-        # Open Trip Map
-        otm_data = self.otm_parser.parse(place, max_pages=flickr_max_pages)
-        data["otm"] = otm_data if otm_data is not None else []
-        
-        # Web Scraper data (e.g., LonelyPlanet)
-        # css_selector = "a.card-link"  # Adjust these selectors as needed.
-        # next_page_selector = "a.pagination__next"
-        # scraper_data = self.scraper_parser.parse(place, css_selector=css_selector,
-        #                                          next_page_selector=next_page_selector,
-        #                                          max_pages=scraper_max_pages)
-        # data["travel_info"] = scraper_data if scraper_data is not None else []
-        
-        # OSM data (Overpass API)
-        # osm_data = self.osm_parser.parse(place)
-        # data["osm"] = osm_data if osm_data is not None else []
+                logging.error(f"[Aggregate] Error loading data for '{place}': {e}")
 
+        # Parse new data from sources
+        wiki_data = self.wikipedia_parser.parse(place, checkpoint=True)
+        data["wikipedia"] = wiki_data if wiki_data else None
+
+        otm_data = self.otm_parser.parse(place)
+        data["otm"] = otm_data if otm_data else []
+
+        self.index[normalized_place] = data
+
+        # Save aggregated data to file
+        try:
+            with open(agg_filename, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+            logging.info(f"[Aggregate] Data for '{place}' saved to {agg_filename}")
+        except Exception as e:
+            logging.error(f"[Aggregate] Error saving data for '{place}': {e}")
         return data
 
-
+    def search(self, query: str) -> List[tuple]:
+        """
+        Delegates search to the IndexManager.
+        Returns a list of tuples (doc_id, score) sorted by descending score.
+        """
+        return self.index_manager.search(query)
