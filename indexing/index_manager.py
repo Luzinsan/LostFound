@@ -3,10 +3,9 @@ import logging
 import re
 import math
 import os
+from config import settings
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
-
-from config import AGGREGATED_DIR, PLACES
 from utils.file_utils import normalize_filename
 from indexing.wildcard_handler import WildcardHandler
 from nltk.stem.snowball import SnowballStemmer
@@ -107,7 +106,7 @@ class IndexManager:
         Extracts text content from attraction data for indexing.
         """
         content = []
-        content.append(attraction_data.get("name", ""))
+        content.append(attraction_data['displayName'].get("text", ""))
         if attraction_data.get("wikipedia_extracts"):
             content.append(attraction_data["wikipedia_extracts"].get("summary", ""))
             sections = attraction_data["wikipedia_extracts"].get("sections")
@@ -151,12 +150,12 @@ class IndexManager:
             "term_kgrams": defaultdict(set)
         }
 
-        for attraction_data in aggregated_city_data['otm']:
-            if name_attract := attraction_data.get("name"): # Use name as name_attract
+        for attraction_data in aggregated_city_data['google_places']:
+            if name_attract := attraction_data['displayName'].get("text"):
                 content = self.get_content_for_indexing(attraction_data)
                 self.build_index(city_name, name_attract, content)
             else:
-                logging.warning(f"[IndexManager] Attraction without xid found in {city_name}, skipping.")
+                logging.warning(f"[IndexManager] Attraction without place_name found in {city_name}, skipping.")
 
         city_index = self.city_indexes[city_name]
         city_index["doc_freq"] = self._calculate_doc_freq(city_index["inverted_index"]) # Calculate doc_freq after building index
@@ -168,7 +167,7 @@ class IndexManager:
             "total_docs": city_index["total_docs"],
             "terms_lexicon": list(city_index["terms_lexicon"])
         }
-        index_dir = os.path.join(AGGREGATED_DIR, "city_indexes")
+        index_dir = os.path.join(settings.AGGREGATED_DIR, "city_indexes")
         if not os.path.exists(index_dir):
             os.makedirs(index_dir)
         index_file = os.path.join(index_dir, f"index_{normalize_filename(city_name)}.json")
@@ -192,7 +191,7 @@ class IndexManager:
         Loads the inverted index for a specific city from file.
         Returns True if loaded successfully, False otherwise.
         """
-        index_dir = os.path.join(AGGREGATED_DIR, "city_indexes")
+        index_dir = os.path.join(settings.AGGREGATED_DIR, "city_indexes")
         index_file = os.path.join(index_dir, f"index_{normalize_filename(city_name)}.json")
         if not os.path.exists(index_file):
             logging.warning(f"[IndexManager] Index file for {city_name} not found: {index_file}")

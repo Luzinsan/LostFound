@@ -1,5 +1,3 @@
-# parsers/base_parser.py
-
 import abc
 from typing import Any, Optional
 

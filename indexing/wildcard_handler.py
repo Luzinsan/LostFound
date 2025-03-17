@@ -1,11 +1,6 @@
-import os
-import json
-import logging
 import re
-from typing import Any, Dict, Optional
-from config import AGGREGATED_DIR, PLACES
 from collections import defaultdict
-from typing import Any, Dict, Optional, List
+from typing import  List
 
 
 class WildcardHandler:

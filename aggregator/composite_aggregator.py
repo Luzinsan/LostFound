@@ -3,15 +3,17 @@ import json
 import logging
 from typing import Any, Dict, Optional, List
 
-from config import AGGREGATED_DIR, RADIUS_SEARCH
+from config import settings
 from utils.file_utils import normalize_filename
 from indexing.index_manager import IndexManager
+from parsers import wikipedia_parser, google_places
 
 class CompositeAggregator:
-    def __init__(self, wikipedia_parser, otm_parser, data_processor):
+    def __init__(self, 
+                 wikipedia_parser: wikipedia_parser.WikipediaParser, 
+                 google_places_parser: google_places.GooglePlacesParser):
         self.wikipedia_parser = wikipedia_parser
-        self.otm_parser = otm_parser
-        self.data_processor = data_processor
+        self.google_places_parser = google_places_parser
         self.index_manager = IndexManager()  # IndexManager now handles indexing logic
         self.index = {}  # Aggregated data storage
 
@@ -21,15 +23,15 @@ class CompositeAggregator:
         Saves the aggregated data in a per-place JSON file.
         """
         data = {"place": place}
-        agg_filename = os.path.join(AGGREGATED_DIR, f"{normalize_filename(place)}.json")
+        agg_filename = os.path.join(settings.AGGREGATED_DIR, f"{normalize_filename(place)}.json")
         normalized_place = normalize_filename(place)
 
         # Parse new data from sources
         wiki_data = self.wikipedia_parser.parse(place, checkpoint=True)
         data["wikipedia"] = wiki_data if wiki_data else None
 
-        otm_data = self.otm_parser.parse(place)
-        data["otm"] = otm_data if otm_data else []
+        google_places_data = self.google_places_parser.parse(place)
+        data["google_places"] = google_places_data if google_places_data else []
 
         self.index[normalized_place] = data
 
