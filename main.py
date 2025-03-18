@@ -5,11 +5,14 @@ import logging
 import signal
 import time
 from aggregator.composite_aggregator import CompositeAggregator
-from parsers.wikipedia_parser import WikipediaParser
-from parsers.google_places import GooglePlacesParser
+from parsers import wikipedia_parser, google_places
+from managers import web_scrape_manager
+
 from utils.file_utils import save_json, load_json, normalize_filename
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO if settings.DEBUG_MODE else logging.ERROR, 
+                    format='%(asctime)s [%(levelname)s] %(message)s')
+
 
 STOP_FLAG = False
 
@@ -35,15 +38,17 @@ if not os.path.exists(os.path.join(settings.AGGREGATED_DIR, "city_indexes")):
 def main():
     # flag to bypass re-parsing
     load_only = '--load-only' in sys.argv
-    load_only = True # For testing load only mode
+    load_only = False # For testing load only mode
     aggregated_filename = os.path.join(settings.AGGREGATED_DIR, "all_places_aggregated.json")
     all_data = {}
 
-    wiki_parser = WikipediaParser()
-    google_places_parser = GooglePlacesParser(api_key=settings.GOOGLE_PLACES_API)
+    wiki_parser = wikipedia_parser.WikipediaParser()
+    web_scraper = web_scrape_manager.WebScrapeManager(
+        google_places.GooglePlacesParser(api_key=settings.GOOGLE_PLACES_API)
+        )
     aggregator = CompositeAggregator(
         wikipedia_parser=wiki_parser,
-        google_places_parser=google_places_parser,
+        web_scrape_manager=web_scraper
     )
 
     if load_only:
@@ -61,8 +66,9 @@ def main():
                 break
             logging.info(f"[Aggregate] Aggregating data for: {place}")
             data = aggregator.aggregate(place)
-            agg_filename = os.path.join(settings.AGGREGATED_DIR, f"{normalize_filename(place)}.json")
-            save_json(data, agg_filename)
+            save_json(data, 
+                      filename=os.path.join(settings.AGGREGATED_DIR, 
+                                            f"{normalize_filename(place)}.json"))
             all_data[place] = data
             time.sleep(2)
         save_json(all_data, aggregated_filename)

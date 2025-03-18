@@ -1,5 +1,3 @@
-# utils/file_utils.py
-
 import json
 import re
 import logging
@@ -15,7 +13,7 @@ def save_json(data: Dict[str, Any], filename: str):
     try:
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=4)
-        logging.info(f"[Save] Data for '{data.get('place')}' saved to {filename}")
+        logging.info(f"[Save] Data saved to {filename}")
     except Exception as e:
         logging.error(f"[Save] Error saving data to {filename}: {e}")
 
