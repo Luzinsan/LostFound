@@ -46,5 +46,5 @@ class WebScrapeManager:
                 time.sleep(5)
 
         logging.info(f"Scraped descriptions for {updated_count} places in {city_name}.")
-        save_json(all_places_data, scraped_filename)
+        save_json(all_places_data, scraped_filename, 'id', 'mongodb://localhost:27017/', 'lost_found', 'place')
         return all_places_data

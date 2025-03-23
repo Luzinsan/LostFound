@@ -10,5 +10,6 @@ dependencies = [
     "flickrapi>=2.4.0",
     "nltk>=3.9.1",
     "pydantic-settings>=2.8.1",
+    "pymongo>=4.11.3",
     "wikipedia-api>=0.8.1",
 ]
