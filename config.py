@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     AGGREGATED_DIR: str = 'aggregated'
     DEBUG_MODE: bool = True
 
+    MONGO_URI: str = 'mongodb://localhost:27017/'
+    MONGO_DB_NAME: str = 'lost_found'
+    BROKER_URL: str = 'redis://localhost:6379/0'
+    RESULT_BACKEND: str = 'redis://localhost:6379/0'
 
     class Config:
         env_file = ".env"

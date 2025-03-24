@@ -1,15 +1,14 @@
 import requests
 import json
-import os
 from config import settings
 import logging
 import time
 from typing import List, Dict, Any, Optional
-from utils.file_utils import normalize_filename, load_json, save_json
-from parsers.scraper import WebScraper
+from parsers import tasks
+from utils.mongodb_handler import mongo_manager
 
 
-class PlacesAPIClient:
+class GooglePlacesParser:
     """
     Client for interacting with the Google Places API (New).
     Handles API requests, error handling, and retries.
@@ -27,7 +26,7 @@ class PlacesAPIClient:
                  num_pages: int = settings.NUM_PAGES, 
                  results_per_page: int = settings.RESULTS_PER_PAGE):
         """
-        Initializes the PlacesAPIClient.
+        Initializes the GooglePlacesParser.
 
         Args:
             api_key: Google Places API key.
@@ -43,7 +42,8 @@ class PlacesAPIClient:
         self.num_pages = num_pages
         self.headers = {
             "Content-Type": "application/json",
-            "X-Goog-Api-Key": api_key
+            "X-Goog-Api-Key": api_key,
+            "X-Goog-FieldMask": settings.FIELD_MASK
         }
         self.params = {
             "languageCode": language_code,
@@ -84,7 +84,9 @@ class PlacesAPIClient:
                 raise ValueError("Invalid HTTP method. Must be 'POST' or 'GET'.")
 
             response.raise_for_status()
-            return response.json()
+            response = response.json()
+            response.update({'timestamp_response': time.time()})
+            return response
 
         except requests.exceptions.RequestException as e:
             logging.error(f"API request error: {e}")
@@ -106,110 +108,50 @@ class PlacesAPIClient:
 
 
     # https://developers.google.com/maps/documentation/places/web-service/text-search
-    def text_search(self, 
-                    query: str, 
-                    included_type: Optional[str] = None,
-                    included_primary_types: Optional[List[str]] = None,
-                    excluded_primary_types: Optional[List[str]] = None
-                    ) -> List[Dict[str, Any]]:
+    def parse(self, 
+              city: str, 
+              included_type: Optional[str]
+              ) -> List[Dict[str, Any]]:
         """
         Performs a Text Search request to the Places API (New).
 
         Args:
-            query: Text query (e.g., "restaurants in Moscow").
+            city: city (e.g., "Moscow").
             included_type:  A single place type to include.
-            included_primary_types: List of primary place types to include.
-            excluded_primary_types: List of primary place types to exclude.
 
         Returns:
             List of dictionaries with place information.
         """
-        url = self.BASE_URL
-        headers = self.headers.copy()
-        headers["X-Goog-FieldMask"] = settings.FIELD_MASK
-
         params = self.params.copy()
         params.update({
-            "textQuery": query, 
+            "textQuery": f"{included_type} в {city}", 
+            "includedType": included_type
         })
-        if included_type:
-            params["includedType"] = included_type
-        if included_primary_types:
-            params["includedPrimaryTypes"] = included_primary_types
-        if excluded_primary_types:
-            params["excludedPrimaryTypes"] = excluded_primary_types
-
-        all_results = []
+        all_places_data = []
         next_page_token = None
-
-        for n in range(self.num_pages):
+        for _ in range(self.num_pages):
             if next_page_token:
                 params["pageToken"] = next_page_token
-
-            response_data = self._make_request(url=url, 
-                                               headers=headers, 
-                                               params=params,
-                                               method='POST')
-            if not response_data: break
-            all_results.extend(response_data.get("places", []))
-
-            if not (next_page_token := response_data.get("nextPageToken")):
+            if  not (response := self._make_request(
+                                        url=self.BASE_URL, 
+                                        headers=self.headers, 
+                                        params=params,
+                                        method='POST')) \
+                or not (places_data_per_page := response.get("places", [])): 
+                break
+            mongo_manager.save(places_data_per_page, "places")
+            for place in places_data_per_page:
+                if (website_uri := place.get("websiteUri")) and "description" not in place:
+                    logging.info(f"Scraping {website_uri}...")
+                    try:
+                        tasks.parse_web_scrape_task\
+                            .apply_async(args=[website_uri], 
+                                         link=tasks.update_place_description_task.s(place))
+                    except Exception as e:
+                        logging.error(f"Error during scraping {website_uri}: {e}")
+            all_places_data.extend(places_data_per_page)
+            if not (next_page_token := response.get("nextPageToken")):
                 break
             time.sleep(1)
-
-        return all_results
-
-class GooglePlacesParser:
-    """
-    Parses place information for a given city using the PlacesAPIClient.
-    Handles fetching places of different types and saving results.
-    """
-    def __init__(self, api_key: str):
-        """
-        Initializes the PlaceParser.
-
-        Args:
-            api_client: An instance of PlacesAPIClient.
-            checkpoint_dir: Directory to save checkpoint files.
-        """
-        self.api_client = PlacesAPIClient(api_key)
-
-    def parse(self, 
-              city_name: str, 
-              types_to_search: List[str] = settings.PLACE_TYPES, 
-              checkpoint_dir: str = os.path.join(settings.BASE_CHECKPOINT_DIR, "google_places")
-              ) -> List[Dict[str, Any]]:
-        """
-        Parses place information for a given city and types of places.
-
-        Args:
-            city_name: Name of the city to parse.
-            types_to_search: List of place types to search for (e.g., ["restaurant", "cafe"]).
-
-        Returns:
-            List of dictionaries with detailed place information.
-        """
-        os.makedirs(checkpoint_dir, exist_ok=True)
-        cp_filename = os.path.join(checkpoint_dir, f"{normalize_filename(city_name)}.json")
-
-        if os.path.exists(cp_filename):
-            logging.info(f"Loading Google Places data from checkpoint: {cp_filename}")
-            return load_json(cp_filename)  # Load from checkpoint
-
-        all_places_data = []
-        for place_type in types_to_search:
-            logging.info(f"Searching for {place_type} in {city_name}...")
-            query = f"{place_type} в {city_name}"
-            places = self.api_client.text_search(query, 
-                                                 included_type=place_type)
-
-            if not places:
-                logging.info(f"No {place_type} found in {city_name}.")
-                continue
-            all_places_data.extend(places)
-            logging.info(f"Found {len(places)} {place_type} in {city_name}.")
-
-        logging.info(f"Saving Google Places data to checkpoint: {cp_filename}")
-        save_json(all_places_data, cp_filename)
-
         return all_places_data
+    
