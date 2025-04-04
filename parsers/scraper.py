@@ -4,8 +4,10 @@ import logging
 from typing import Optional, Dict, List
 from urllib.parse import urljoin, urlparse
 from config import settings
+import re
+from parsers.base_parser import BaseParser
 
-class WebScraper:
+class WebScraper(BaseParser):
 
     def __init__(self, 
                  user_agent: str = settings.USER_AGENT, 
@@ -22,7 +24,8 @@ class WebScraper:
             'User-Agent': user_agent
         }
 
-    def parse_website(self, base_url: str) -> Optional[Dict]:
+
+    def parse(self, base_url: str) -> Optional[str]:
         """
         Parses a website, following links up to a maximum depth and
         collecting information from each page.
@@ -40,7 +43,9 @@ class WebScraper:
             return None
         try:
             base_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
-            return self._recursive_parse(base_url, base_url, depth=0)
+            if parsed_dict := self._recursive_parse_website(base_url, base_url, depth=0):
+                return self._recursive_parse_dict(parsed_dict, depth=0)
+            return None
         except requests.exceptions.RequestException as e:
             logging.error(f"Error requesting website {base_url}: {e}")
             return None
@@ -48,7 +53,33 @@ class WebScraper:
             logging.error(f"An unexpected error occurred: {e}")
             return None
 
-    def _recursive_parse(self, base_url: str, current_url: str, depth: int) -> Optional[Dict]:
+    def _recursive_parse_dict(self, parsed_dict: dict, depth: int = 0) -> str:
+        try:
+            description_terms = []
+            if depth == 0:
+                description_terms.append(parsed_dict.get('title', ''))
+            
+            try:
+                description_embedded = parsed_dict.get('description', None)
+                if description_embedded:
+                    description_terms.append(
+                        description_embedded.get('meta_description', '') \
+                        + ' ' + description_embedded.get('paragraphs', ''))
+            except Exception as e:
+                logging.error(f"Error processing description: {e}")
+            
+            try:
+                for linked_page in parsed_dict.get('links', []):
+                    if result := self._recursive_parse_dict(linked_page, depth + 1):
+                        description_terms.append(result)
+            except Exception as e:
+                logging.error(f"Error processing links: {e}")
+            return self.clean_string(' '.join(description_terms)) if description_terms else ''
+        except Exception as e:
+            logging.error(f"Error in _recursive_parse_dict: {e} {description_terms}")
+            return ''
+
+    def _recursive_parse_website(self, base_url: str, current_url: str, depth: int) -> Optional[Dict]:
         """
         Recursively parses a website, following links and collecting information.
 
@@ -75,13 +106,13 @@ class WebScraper:
             # 1. Extract data from the current page.
             page_data = {
                 "url": current_url,
-                "title": soup.title.string if soup.title else None,
+                "title": soup.title.string if soup.title else '',
                 "description": self.extract_description(soup),
                 "links": [],  # This will hold data from linked pages
             }
 
             # 2. Find all links on the current page.
-            for link in soup.find_all('a', href=True)[:3]:
+            for link in soup.find_all('a', href=True)[:settings.MAX_LINKS]:
                 absolute_url = urljoin(current_url, link['href'])  # Handles relative & absolute
 
                 # Basic filtering. Skip external, mailto, and tel links.
@@ -91,7 +122,7 @@ class WebScraper:
                         continue
 
                 # 3. Recursively parse linked pages.
-                linked_page_data = self._recursive_parse(base_url, absolute_url, depth + 1)
+                linked_page_data = self._recursive_parse_website(base_url, absolute_url, depth + 1)
                 if linked_page_data:
                     page_data["links"].append(linked_page_data)
 
@@ -106,8 +137,7 @@ class WebScraper:
             return None
 
 
-    @staticmethod
-    def extract_description(soup: BeautifulSoup) -> Optional[str]:
+    def extract_description(self, soup: BeautifulSoup) -> str:
         """
         Extracts the description of the place from the HTML page.
         Extraction attempts:
@@ -119,8 +149,8 @@ class WebScraper:
         if meta_description:
             descriptions.update({'meta_description': meta_description.get('content')})
 
-        if paragraphs := soup.find_all('p')[:20]:
-            descriptions.update({'paragraphs':" ".join([p.text.strip() for p in paragraphs])})
+        if paragraphs := soup.find_all('p')[:settings.MAX_PARAGRAPHS]:
+            descriptions.update({'paragraphs': self.clean_string(" ".join([p.text for p in paragraphs]))})
 
-        return descriptions if descriptions else None
+        return descriptions if descriptions else ''
 

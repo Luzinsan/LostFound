@@ -62,11 +62,14 @@ def parse_web_scrape_task(url: str) -> dict:
     Task to parse website information about place in a given url.
     """
     logging.info(f"[Task] Starting website information parsing for url: {url}")
-    return WebScraper().parse_website(url)
+    return WebScraper().parse(url)
 
 @celery_app.task
-def update_place_description_task(description, place: dict) -> dict:
-    place["description"] = description
-    place['timestamp_scraping'] = time.time()
-    mongo_manager.save(place, "places")
-    return place
+def update_place_description_task(description, data: dict) -> dict:
+    data["description"] = description if description else ''
+    data['timestamp_scraping'] = time.time()
+    data['search_text'] = google_places.GooglePlacesParser(
+            api_key=settings.GOOGLE_PLACES_API)\
+                .generate_search_text(data)
+    mongo_manager.save(data, "places")
+    return data

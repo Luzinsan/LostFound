@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO if settings.DEBUG_MODE else logging.ERROR
 
 
 def main():
-    task_group = group(parse_city_task.s(city) for city in settings.PLACES)
+    task_group = group(parse_city_task.s(city) for city in settings.CITIES)
     result = task_group.apply_async()
     results = result.get()
     

@@ -9,7 +9,7 @@ class MongoDBManager:
     Class to manage MongoDB operations.
 
     This manager handles two collections:
-      - 'wikipedia' for aggregated Wikipedia data about cities.
+      - 'cities' for aggregated Wikipedia data about cities and links to places.
       - 'places' for data retrieved from Google Places.
     The manager provides methods to save and load data for each collection.
     """
@@ -23,12 +23,12 @@ class MongoDBManager:
         self.client = MongoClient(uri)
         self.db = self.client[db_name]
         self.collections = {
-            "wikipedia": {
-                "collection": self.db["wikipedia"], 
+            "cities": {
+                "collection": self.db["cities"], 
                 "index": "city"},
             "places": {
                 "collection": self.db["places"], 
-                "index": "id"},
+                "index": "_id"},
         }
         self._ensure_indexes()
 
@@ -38,7 +38,8 @@ class MongoDBManager:
         """
         try:
             for _, propertises in self.collections.items():
-                propertises['collection'].create_index(propertises["index"], unique=True)
+                if propertises["index"] != "_id":
+                    propertises['collection'].create_index(propertises["index"], unique=True, background=True)
             logging.info("Unique indexes created successfully.")
         except errors.PyMongoError as e:
             logging.error(f"Error creating indexes: {e}")
@@ -107,6 +108,26 @@ class MongoDBManager:
                 logging.error(f"Error during bulk insert: {e.details}")
             except errors.PyMongoError as e:
                 logging.error(f"Error during bulk operation: {e}")
+
+    def update_city_places(self, city: str, new_places: List[str]) -> None:
+        """
+        Updates the city document by adding new place references (place IDs) to the 'places' field.
+        Uses $addToSet to avoid duplicates.
+
+        Args:
+            city: The name of the city.
+            new_places: A list of new place IDs to add.
+        """
+        try:
+            self.collections["cities"]['collection'].update_one(
+                {"city": city},
+                {"$addToSet": {"places": {"$each": new_places}}},
+                upsert=True
+            )
+            logging.info(f"City document for '{city}' updated with new place references.")
+        except errors.PyMongoError as e:
+            logging.error(f"Error updating city places for '{city}': {e}")
+
 
     def _get_unique_field(self, collection_name: str) -> str:
         """

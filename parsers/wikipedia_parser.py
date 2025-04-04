@@ -12,13 +12,13 @@ class WikipediaParser(BaseParser):
     def __init__(self, user_agent: str = settings.USER_AGENT):
         self.wiki = wikipediaapi.Wikipedia(user_agent=user_agent, language=settings.LANGUAGE_CODE)
 
-    def parse_sections(self, sections):
-        sub_sections = {}
+    def parse_sections(self, sections: wikipediaapi.WikipediaPageSection) -> str:
+        sub_sections = []
         for s in sections:
-            data = self.parse_sections(s.sections) if s.sections else s.text[:]
+            data = self.parse_sections(s.sections) if s.sections else s.text
             if data:
-                sub_sections[s.title] = data
-        return sub_sections
+                sub_sections.append(s.title + ' ' + data)
+        return self.clean_string(' '.join(sub_sections))
 
     def parse(self, city: str
               ) -> Optional[Dict[str, str]]:
@@ -31,12 +31,15 @@ class WikipediaParser(BaseParser):
                 "wikipedia": {
                     "url": page.fullurl,
                     "title": page.title,
-                    "summary": page.summary[:],
-                    "sections": self.parse_sections(page.sections),
+                    "summary": page.summary,
+                    "sections": self.parse_sections(page.sections), 
                 }, 
                 "timestamp": time.time()
                 }
-            mongo_manager.save(wiki_data, "wikipedia")
+            wiki_data['search_text'] = page.title \
+                               + ' ' + page.summary \
+                               + ' ' + wiki_data['wikipedia']['sections']
+            mongo_manager.save(wiki_data, "cities")
             return wiki_data
         else:
             logging.warning(f"[Wikipedia] Page '{city}' does not exist.")

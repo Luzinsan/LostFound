@@ -6,9 +6,10 @@ import time
 from typing import List, Dict, Any, Optional
 from parsers import tasks
 from utils.mongodb_handler import mongo_manager
+from parsers.base_parser import BaseParser
 
 
-class GooglePlacesParser:
+class GooglePlacesParser(BaseParser):
     """
     Client for interacting with the Google Places API (New).
     Handles API requests, error handling, and retries.
@@ -43,7 +44,9 @@ class GooglePlacesParser:
         self.headers = {
             "Content-Type": "application/json",
             "X-Goog-Api-Key": api_key,
-            "X-Goog-FieldMask": settings.FIELD_MASK
+            "X-Goog-FieldMask": settings.FIELD_MASK + ',' + settings.BOOLEAN_FIELDS \
+                if settings.BOOLEAN_FIELDS \
+                else settings.FIELD_MASK
         }
         self.params = {
             "languageCode": language_code,
@@ -55,7 +58,8 @@ class GooglePlacesParser:
                       url: str, 
                       headers: Optional[Dict[str, Any]] = None, 
                       params: Optional[Dict[str, Any]] = None,
-                      method: str = "POST"
+                      method: str = "POST",
+                      retries=2
                       ) -> Optional[Dict[str, Any]]:
         """
         Makes an HTTP request with error handling and retries.
@@ -90,21 +94,83 @@ class GooglePlacesParser:
 
         except requests.exceptions.RequestException as e:
             logging.error(f"API request error: {e}")
-            if self.retries > 0:
-                delay = self.retry_delay * (2 ** (self.max_retries - self.retries))  # Exponential backoff
-                logging.info(f"Retrying in {delay} seconds... ({self.retries} retries remaining)")
+            if retries > 0:
+                delay = self.retry_delay * (2 ** (self.max_retries - retries))  # Exponential backoff
+                logging.info(f"Retrying in {delay} seconds... ({retries} retries remaining)")
                 time.sleep(delay)
                 return self._make_request(url, 
                                           headers=headers, 
                                           params=params, 
                                           method=method, 
-                                          retries=self.retries - 1)
+                                          retries=retries - 1)
             else:
                 logging.error(f"Max retries exceeded for URL: {url}")
                 return None
         except json.JSONDecodeError as e:
             logging.error(f"JSON decode error: {e}")
             return None
+    
+    def generate_search_text(self, data: Dict[str, Any]) -> str:
+        try:
+            def process_value(attr: str, value: Any) -> str:
+                try:
+                    if value is None:
+                        return ''
+                    if isinstance(value, str):
+                        return value
+                    elif isinstance(value, bool) and value==True:
+                        return attr
+                    elif not isinstance(value,bool) and isinstance(value, (int, float)):
+                        return f'{attr}_{value}'
+                    elif isinstance(value, list) and (attr=='types'):
+                        return ' '.join(str(v) for v in value if v is not None)
+                    else:
+                        return ''
+                except Exception as e:
+                    logging.error(f"Error processing value for attribute {attr}: {e}")
+                    return ''
+
+            search_terms = []
+            priority_fields = ['displayName','primaryTypeDisplayName', 'editorialSummary', 
+                                'types', 'rating', 'description']
+            try:
+                for field in priority_fields:
+                    if field in data:
+                        search_terms.append(process_value(field, data[field]))
+            except Exception as e:
+                logging.error(f"Error processing priority fields: {e}")
+
+            try:
+                for attr, value in data.items():
+                    if not \
+                        (attr in priority_fields 
+                         or attr.startswith('_') 
+                         or attr in {'id', 'timestamp_response','websiteUri','reviews','timestamp_scraping'}):
+                        search_terms.append(process_value(attr, value))
+            except Exception as e:
+                logging.error(f"Error processing additional fields: {e}")
+                        
+            return self.clean_string(' '.join(search_terms))
+        except Exception as e:
+            logging.error(f"Error in generate_search_text: {e}")
+            return ''
+
+
+    def process_reviews_for_embeddings(self, reviews: List[Dict]) -> str:
+        try:
+            texts = []
+            for review in reviews:
+                try:
+                    texts.append(f"{review.get('relativePublishTimeDescription', '')} " \
+                               + f"rating_{review.get('rating', '')} " \
+                               + f"{review.get('text', {}).get('text', '')}\n")
+                except Exception as e:
+                    logging.error(f"Error processing review: {e}")
+                    continue
+            return self.clean_string(' '.join(texts))
+        except Exception as e:
+            logging.error(f"Error in process_reviews_for_embeddings: {e}")
+            return ''
 
 
     # https://developers.google.com/maps/documentation/places/web-service/text-search
@@ -128,6 +194,7 @@ class GooglePlacesParser:
             "includedType": included_type
         })
         all_places_data = []
+        new_place_ids = []
         next_page_token = None
         for _ in range(self.num_pages):
             if next_page_token:
@@ -139,8 +206,31 @@ class GooglePlacesParser:
                                         method='POST')) \
                 or not (places_data_per_page := response.get("places", [])): 
                 break
+            for place in places_data_per_page:
+                place['_id'] = place.pop('id')
+                for field in ['displayName','editorialSummary','primaryTypeDisplayName','priceRange']:
+                    if field in place.keys():
+                        if field == 'priceRange':
+                            place[field] = ('startPrice_' \
+                                            + place[field].get('startPrice', {})\
+                                                            .get('currencyCode', '') \
+                                        + '_' + place[field].get('startPrice', {})\
+                                                            .get('units', '') \
+                                            if 'startPrice' in place[field].keys() else '') \
+                                        + (' endPrice_' \
+                                            + place[field].get('endPrice', {})\
+                                                            .get('currencyCode', '') \
+                                        + '_' + place[field].get('endPrice', {})\
+                                                            .get('units', '') \
+                                            if 'endPrice' in place[field].keys() else '')
+                        else:
+                            place[field] = place[field].get('text',None) 
+                if place.get('reviews', None):
+                    place['reviews'] = self.process_reviews_for_embeddings(place['reviews'])
+
             mongo_manager.save(places_data_per_page, "places")
             for place in places_data_per_page:
+                new_place_ids.append(place["_id"])
                 if (website_uri := place.get("websiteUri")) and "description" not in place:
                     logging.info(f"Scraping {website_uri}...")
                     try:
@@ -153,5 +243,6 @@ class GooglePlacesParser:
             if not (next_page_token := response.get("nextPageToken")):
                 break
             time.sleep(1)
+        mongo_manager.update_city_places(city, new_place_ids)
         return all_places_data
     
