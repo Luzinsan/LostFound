@@ -29,6 +29,9 @@ class MongoDBManager:
             "places": {
                 "collection": self.db["places"], 
                 "index": "_id"},
+            "city_indices": {
+                "collection": self.db["city_indices"], 
+                "index": "_id"},
         }
         self._ensure_indexes()
 
@@ -158,7 +161,7 @@ class MongoDBManager:
         if collection_name not in self.collections:
             raise ValueError(f"Invalid collection name: {collection_name}")
 
-        collection = self.collections[collection_name]
+        collection = self.collections[collection_name]['collection']
         try:
             results = list(collection.find(query))
             logging.info(f"Loaded {len(results)} documents from collection '{collection_name}'.")

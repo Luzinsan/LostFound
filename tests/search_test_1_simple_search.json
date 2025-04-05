@@ -1,0 +1,68 @@
+{
+  "status": "success",
+  "message": "Found 4 results for 'музей' in Москва",
+  "results": [
+    {
+      "doc_id": "ChIJ-4GgOlNKtUYRJAfJskWS2Sc",
+      "score": 1.5192781152365635,
+      "city": "Москва",
+      "name": "Государственный музей изобразительных искусств имени А.С. Пушкина",
+      "address": "ул. Волхонка, 12, Москва",
+      "types": [
+        "tourist_attraction",
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Музей с предметами старины, скульптурой и живописью, а также временными экспозициями. Памятник классицизма."
+    },
+    {
+      "doc_id": "ChIJ5eldWMAn8UARbMTjyzbhSt4",
+      "score": 0.7325090912747717,
+      "city": "Москва",
+      "name": "Московский музей современного искусства",
+      "address": "Петровка ул., 25, Москва",
+      "types": [
+        "tourist_attraction",
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Постоянная выставка предметов искусства XX и XXI вв., расположенная в особняке в неоклассическом стиле."
+    },
+    {
+      "doc_id": "ChIJBZbmYllKtUYR5TrL54oWz6Q",
+      "score": 0.3383134772073173,
+      "city": "Москва",
+      "name": "Храм Василия Блаженного",
+      "address": "Храм Василия Блаженного, Красная пл., 7, Москва",
+      "types": [
+        "tourist_attraction",
+        "museum",
+        "church",
+        "place_of_worship",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Собор XVI века с разноцветными куполами (ныне музей)."
+    },
+    {
+      "doc_id": "ChIJ5YKXUalLtUYRxI35-W_T2aY",
+      "score": 0.17835003961472704,
+      "city": "Москва",
+      "name": "Галерея Ruarts",
+      "address": "1-й Зачатьевский пер., 10, Москва",
+      "types": [
+        "art_gallery",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Музей современного искусства, открытый в 2004 году: картины, инсталляции, фотографии."
+    }
+  ],
+  "total_found": 4,
+  "query_tokens": [
+    "муз"
+  ],
+  "wildcard_used": false
+}

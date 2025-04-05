@@ -1,0 +1,128 @@
+{
+  "status": "success",
+  "message": "Found 8 results for 'парк' across 3 cities",
+  "results": [
+    {
+      "doc_id": "ChIJ65CvQWE2lkYRiNrWRdnnZUU",
+      "score": 1.9563167135540562,
+      "city": "Санкт-Петербург",
+      "name": "Парк 300-летия Санкт-Петербурга",
+      "address": "Приморский пр., 74, Санкт-Петербург",
+      "types": [
+        "park",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Благоустроенный прибрежный парк с фонтаном, памятником, бесплатным Wi-Fi, игровой площадкой и многим другим."
+    },
+    {
+      "doc_id": "ChIJj1PeMaQ2lkYRh4xUGbXCKHw",
+      "score": 1.4408728792742171,
+      "city": "Санкт-Петербург",
+      "name": "Центральный парк культуры и отдыха им. С. М. Кирова",
+      "address": "Центральный парк культуры и отдыха им. Кирова, Елагин остров, 4, лит.Б, Санкт-Петербург",
+      "types": [
+        "park",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Парк на речном острове, где находятся разнообразные музеи, пруды с местами для катания на лодках, пешеходные дорожки и зимний каток."
+    },
+    {
+      "doc_id": "ChIJL6rB_zbWUUERIiYreo_1dUU",
+      "score": 1.1975191131037908,
+      "city": "Нижний Новгород",
+      "name": "Сормовский парк культуры и отдыха",
+      "address": "ул. Энгельса, Нижний Новгород",
+      "types": [
+        "park",
+        "tourist_attraction",
+        "amusement_center",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Городской парк с озером, кафе, зоной барбекю, аттракционами, бассейном и работающим весь год катком."
+    },
+    {
+      "doc_id": "ChIJIa7uAFhKtUYRRWeoyNDZL6U",
+      "score": 1.1730183055629846,
+      "city": "Москва",
+      "name": "Парк Зарядье",
+      "address": "улица Варварка домовладение 6, строение 1, Москва",
+      "types": [
+        "park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Огромный парк с несколькими амфитеатрами и воздушным мостом, откуда видно Кремль."
+    },
+    {
+      "doc_id": "ChIJtZuSQwbVUUER6fitvnoCFq4",
+      "score": 0.8367849605145009,
+      "city": "Нижний Новгород",
+      "name": "Джани Ресторани",
+      "address": "ул. Пискунова, 40к3, 1 этаж, Нижний Новгород",
+      "types": [
+        "meal_delivery",
+        "catering_service",
+        "food_delivery",
+        "restaurant",
+        "food",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Unknown"
+    },
+    {
+      "doc_id": "ChIJkQOMeLc1tUYRCF1Jx2d1ux0",
+      "score": 0.6727604987787705,
+      "city": "Москва",
+      "name": "Парк Сокольники",
+      "address": "ул. Сокольнический Вал, 1, стр. 1, Москва",
+      "types": [
+        "park",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Основанный царем Алексеем Михайловичем парк с дикими животными, местами для кемпинга, аттракционами и ресторанами."
+    },
+    {
+      "doc_id": "ChIJaU5stOjVUUERKKXiQ6MxVuM",
+      "score": 0.3338895655254905,
+      "city": "Нижний Новгород",
+      "name": "Парк им. 1 мая",
+      "address": "ул. Октябрьской Революции, Нижний Новгород",
+      "types": [
+        "amusement_park",
+        "tourist_attraction",
+        "aquarium",
+        "park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Unknown"
+    },
+    {
+      "doc_id": "ChIJVYd690vUUUERXxRZ6B2MXJs",
+      "score": 0.17559477150692893,
+      "city": "Нижний Новгород",
+      "name": "Отель Joy",
+      "address": "ул. Октябрьская, 4, Нижний Новгород",
+      "types": [
+        "hotel",
+        "lodging",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Простой отель с номерами в теплых тонах, крытым бассейном, сауной, бесплатным завтраком и Wi-Fi."
+    }
+  ],
+  "total_found": 8,
+  "query_tokens": [
+    "парк"
+  ],
+  "wildcard_used": false
+}

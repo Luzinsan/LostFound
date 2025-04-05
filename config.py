@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     MAX_DEPTH_WEB_SCRAPER: int = 2
     MAX_LINKS: int = 3
     MAX_PARAGRAPHS: int = 20
+    SPELL_CHECKER_MAX_DISTANCE: int = 5
     RESULTS_PER_PAGE: int = 5
     NUM_PAGES: int = 5
     BASE_CHECKPOINT_DIR: str = 'checkpoints'
