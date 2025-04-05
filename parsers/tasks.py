@@ -5,11 +5,10 @@ from parsers import wikipedia_parser, google_places
 from config import settings
 import time
 from utils.mongodb_handler import mongo_manager
+from celery_app import app
 
-celery_app = Celery('tasks', broker=settings.BROKER_URL, backend=settings.RESULT_BACKEND)
-celery_app.conf.broker_connection_retry_on_startup = True
 
-@celery_app.task
+@app.task
 def parse_city_task(city: str) -> dict:
     """
     Celery task to parse data for a city and store it in MongoDB.
@@ -20,7 +19,7 @@ def parse_city_task(city: str) -> dict:
     return result.join(disable_sync_subtasks=False)
 
 
-@celery_app.task
+@app.task
 def parse_wikipedia_task(city: str) -> dict:
     """
     Task to parse only Wikipedia data for a given city.
@@ -30,7 +29,7 @@ def parse_wikipedia_task(city: str) -> dict:
         .parse(city)
 
 
-@celery_app.task
+@app.task
 def parse_google_places_task(city: str) -> dict:
     """
     Celery task to parse Google Places data for all types of places in the given city.
@@ -44,7 +43,7 @@ def parse_google_places_task(city: str) -> dict:
     return result.join(disable_sync_subtasks=False)
 
 
-@celery_app.task
+@app.task
 def parse_place_by_type_task(city: str, included_type: str) -> dict:
     """
     Task to parse place of a specific type (e.g., "restaurant") in a given city.
@@ -56,7 +55,7 @@ def parse_place_by_type_task(city: str, included_type: str) -> dict:
 
 
 
-@celery_app.task
+@app.task
 def parse_web_scrape_task(url: str) -> dict:
     """
     Task to parse website information about place in a given url.
@@ -64,7 +63,7 @@ def parse_web_scrape_task(url: str) -> dict:
     logging.info(f"[Task] Starting website information parsing for url: {url}")
     return WebScraper().parse(url)
 
-@celery_app.task
+@app.task
 def update_place_description_task(description, data: dict) -> dict:
     data["description"] = description if description else ''
     data['timestamp_scraping'] = time.time()

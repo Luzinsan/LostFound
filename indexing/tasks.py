@@ -1,18 +1,16 @@
 import logging
 import time
 import math
-from celery import Celery, group
+from celery import group
 from config import settings
 from utils.mongodb_handler import mongo_manager
 from parsers import google_places
 from indexing.index_manager import IndexManager
 from indexing.wildcard_handler import WildcardHandler
 from typing import List
+from celery_app import app
 
-celery_app = Celery('indexing_tasks', broker=settings.BROKER_URL, backend=settings.RESULT_BACKEND)
-celery_app.conf.broker_connection_retry_on_startup = True
-
-@celery_app.task
+@app.task
 def build_location_index_task(location_id: str) -> dict:
     """
     Task to build inverted index for a specific location and store it in MongoDB.
@@ -51,7 +49,7 @@ def build_location_index_task(location_id: str) -> dict:
         logging.error(f"Error building index for location {location_id}: {e} {type(location_data)}")
         return {"status": "error", "message": str(e)}
 
-@celery_app.task
+@app.task
 def update_city_index_task(city: str, location_id: str, token_freqs: dict) -> dict:
     """
     Updates the inverted index for a city by adding or updating tokens for a location.
@@ -92,7 +90,7 @@ def update_city_index_task(city: str, location_id: str, token_freqs: dict) -> di
         logging.error(f"Error updating city index for {city}, location {location_id}: {e}")
         return {"status": "error", "message": str(e)}
 
-@celery_app.task
+@app.task
 def build_city_locations_indices_task(city: str) -> dict:
     """
     Task to build indices for all locations in a specific city.
@@ -137,7 +135,7 @@ def build_city_locations_indices_task(city: str) -> dict:
         logging.error(f"Error building indices for city {city}: {e}")
         return {"status": "error", "message": str(e)}
 
-@celery_app.task
+@app.task
 def build_all_indices_task() -> dict:
     """
     Task to build indices for all locations in all cities.
@@ -159,7 +157,7 @@ def build_all_indices_task() -> dict:
         logging.error(f"Error building indices for all cities: {e}")
         return {"status": "error", "message": str(e)}
 
-@celery_app.task
+@app.task
 def search_index_task(city: str, query: str, limit: int = 10) -> dict:
     """
     Searches the inverted index for the given query within a specific city.
@@ -228,7 +226,7 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
             "results": []
         }
 
-@celery_app.task
+@app.task
 def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10) -> dict:
     """
     Searches for the query across all specified cities (or all cities if none specified).

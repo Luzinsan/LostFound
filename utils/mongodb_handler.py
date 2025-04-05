@@ -170,6 +170,42 @@ class MongoDBManager:
             logging.error(f"Error loading data: {e}")
             return []
 
+    def load_paginated(self, query: Dict[str, Any], collection_name: str, skip: int = 0, limit: int = 10) -> Dict[str, Any]:
+        """
+        Loads paginated data from the specified collection based on the given query.
+
+        Args:
+            query: A dictionary containing the query criteria.
+            collection_name: The name of the collection to load data from.
+            skip: Number of documents to skip.
+            limit: Maximum number of documents to return.
+
+        Returns:
+            A dictionary containing the paginated results and total count.
+        """
+        if collection_name not in self.collections:
+            raise ValueError(f"Invalid collection name: {collection_name}")
+
+        collection = self.collections[collection_name]['collection']
+        try:
+            # Get total count
+            total = collection.count_documents(query)
+            
+            # Get paginated results
+            results = list(collection.find(query).skip(skip).limit(limit))
+            
+            logging.info(f"Loaded {len(results)} documents (page) from collection '{collection_name}'.")
+            return {
+                "results": results,
+                "total": total
+            }
+        except errors.PyMongoError as e:
+            logging.error(f"Error loading paginated data: {e}")
+            return {
+                "results": [],
+                "total": 0
+            }
+
     def close(self) -> None:
         """
         Closes the connection to MongoDB.
