@@ -7,6 +7,7 @@ import nltk
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union, Tuple
 from indexing.wildcard_handler import WildcardHandler
+from indexing.spell_checker import SpellChecker
 from nltk.stem.snowball import SnowballStemmer
 from utils.mongodb_handler import MongoDBManager
 
@@ -52,10 +53,12 @@ class IndexManager:
         Tokenizes text, supports Cyrillic and Latin, and applies stemming.
         """
         try:
-            # Convert to lowercase and remove special characters
-            text = re.sub(r'[^\w\s]', ' ', text.lower())
-            # Split into words and filter out stop words
-            tokens = [word for word in text.split() if word and word not in self.stop_words]
+            # Convert to lowercase and remove special characters, numbers
+            text = re.sub(r'[^а-яёa-z\s]', ' ', text.lower())
+            
+            # Split into words and filter out stop words and short words
+            tokens = [word for word in text.split() if word and len(word) >= 3 and word not in self.stop_words]
+            
             # Apply stemming
             return [self._stem(token) for token in tokens]
         except Exception as e:
@@ -248,9 +251,17 @@ class IndexManager:
             inverted_index = city_index["inverted_index"]
             results = defaultdict(float)
             
+            # Initialize spell checker with city's lexicon
+            spell_checker = SpellChecker(city_index['terms_lexicon'])
+            
+            # Correct spelling in the query
+            corrected_query = spell_checker.correct_query(query)
+            if corrected_query != query:
+                logging.info(f"Query corrected from '{query}' to '{corrected_query}'")
+            
             # Process query with wildcard support
             wildcard_handler = WildcardHandler(city_index['terms_lexicon'])
-            tokens = wildcard_handler.process_query(query)
+            tokens = wildcard_handler.process_query(corrected_query)
             
             for token in tokens:
                 if token in inverted_index:

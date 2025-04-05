@@ -205,13 +205,19 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
         # Limit results
         limited_results = results[:limit]
         
+        # Check if query was corrected
+        corrected_query = None
+        if query_tokens and query_tokens != query.split():
+            corrected_query = ' '.join(query_tokens)
+        
         return {
             "status": "success",
             "message": f"Found {len(limited_results)} results for '{query}' in {city}",
             "results": limited_results,
             "total_found": len(results),
             "query_tokens": query_tokens if query_tokens else [],
-            "wildcard_used": '*' in query
+            "wildcard_used": '*' in query,
+            "corrected_query": corrected_query if corrected_query else None
         }
         
     except Exception as e:
