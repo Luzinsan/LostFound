@@ -25,18 +25,18 @@ class SimilaritySearchEngine:
 
 
 #Простой пример
-items = {
-        "item1": np.random.randn(128),
-        "item2": np.random.randn(128),
-        "item3": np.random.randn(128),
-        "item4": np.random.randn(128),
-        "item5": np.random.randn(128),
-}
+# items = {
+#         "item1": np.random.randn(128),
+#         "item2": np.random.randn(128),
+#         "item3": np.random.randn(128),
+#         "item4": np.random.randn(128),
+#         "item5": np.random.randn(128),
+# }
     
 
-search_engine = SimilaritySearchEngine(items)
-query = np.random.randn(128)
-results = search_engine.find_similar(query, top_k=3)
-print("Top Similar Items:")
-for item_id, similarity in results.items():
-    print(f"{item_id}: {similarity:.3f}")
+# search_engine = SimilaritySearchEngine(items)
+# query = np.random.randn(128)
+# results = search_engine.find_similar(query, top_k=3)
+# print("Top Similar Items:")
+# for item_id, similarity in results.items():
+#     print(f"{item_id}: {similarity:.3f}")
