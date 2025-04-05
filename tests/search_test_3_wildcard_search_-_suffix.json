@@ -1,0 +1,55 @@
+{
+  "status": "success",
+  "message": "Found 3 results for '*театр' in Москва",
+  "results": [
+    {
+      "doc_id": "ChIJlTsFP0ZKtUYRUJfF512v7Dc",
+      "score": 3.357630379226157,
+      "city": "Москва",
+      "name": "МХАТ Горького ART-THEATRE.RU",
+      "address": "Тверской б-р, 22, Москва",
+      "types": [
+        "performing_arts_theater",
+        "event_venue",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Unknown"
+    },
+    {
+      "doc_id": "ChIJv0Ie-0RKtUYRt_LisqTEg0A",
+      "score": 0.8550974563917082,
+      "city": "Москва",
+      "name": "Московский художественный театр им. А.П.Чехова",
+      "address": "Камергерский пер., 3, Москва",
+      "types": [
+        "performing_arts_theater",
+        "tourist_attraction",
+        "event_venue",
+        "museum",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Классический театр XIX века, где идут спектакли по произведениям Толстого, Шекспира, Ибсена и других."
+    },
+    {
+      "doc_id": "ChIJIa7uAFhKtUYRRWeoyNDZL6U",
+      "score": 0.30970585673808804,
+      "city": "Москва",
+      "name": "Парк Зарядье",
+      "address": "улица Варварка домовладение 6, строение 1, Москва",
+      "types": [
+        "park",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Огромный парк с несколькими амфитеатрами и воздушным мостом, откуда видно Кремль."
+    }
+  ],
+  "total_found": 3,
+  "query_tokens": [
+    "амфитеатр",
+    "театр"
+  ],
+  "wildcard_used": true
+}

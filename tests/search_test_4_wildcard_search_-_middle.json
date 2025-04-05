@@ -1,0 +1,53 @@
+{
+  "status": "success",
+  "message": "Found 3 results for 'рест*ран' in Москва",
+  "results": [
+    {
+      "doc_id": "ChIJabccKvlKtUYR1RlzHZbNPjI",
+      "score": 0.716735041332518,
+      "city": "Москва",
+      "name": "Bjorn",
+      "address": "ул. Пятницкая, 3, Москва",
+      "types": [
+        "restaurant",
+        "point_of_interest",
+        "food",
+        "establishment"
+      ],
+      "summary": "Элитный ресторан с блюдами и коктейлями северных стран, а также бережным отношением к природе."
+    },
+    {
+      "doc_id": "ChIJlTsFP0ZKtUYRUJfF512v7Dc",
+      "score": 0.20839850386570496,
+      "city": "Москва",
+      "name": "МХАТ Горького ART-THEATRE.RU",
+      "address": "Тверской б-р, 22, Москва",
+      "types": [
+        "performing_arts_theater",
+        "event_venue",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Unknown"
+    },
+    {
+      "doc_id": "ChIJkQOMeLc1tUYRCF1Jx2d1ux0",
+      "score": 0.20839850386570496,
+      "city": "Москва",
+      "name": "Парк Сокольники",
+      "address": "ул. Сокольнический Вал, 1, стр. 1, Москва",
+      "types": [
+        "park",
+        "tourist_attraction",
+        "point_of_interest",
+        "establishment"
+      ],
+      "summary": "Основанный царем Алексеем Михайловичем парк с дикими животными, местами для кемпинга, аттракционами и ресторанами."
+    }
+  ],
+  "total_found": 3,
+  "query_tokens": [
+    "ресторан"
+  ],
+  "wildcard_used": true
+}
