@@ -1,11 +1,13 @@
 import logging
-from celery import Celery, group
+from celery import Celery, group, shared_task
 from parsers.scraper import WebScraper
 from parsers import wikipedia_parser, google_places
 from config import settings
 import time
 from utils.mongodb_handler import mongo_manager
 from celery_app import app
+from embeddings.BERT_ru import RussianBERTEmbedder
+from typing import Dict, List
 
 
 @app.task
@@ -54,7 +56,6 @@ def parse_place_by_type_task(city: str, included_type: str) -> dict:
         .parse(city, included_type)
 
 
-
 @app.task
 def parse_web_scrape_task(url: str) -> dict:
     """
@@ -65,10 +66,38 @@ def parse_web_scrape_task(url: str) -> dict:
 
 @app.task
 def update_place_description_task(description, data: dict) -> dict:
+    """
+    Updates the place description and creates embeddings for the location.
+    """
     data["description"] = description if description else ''
     data['timestamp_scraping'] = time.time()
     data['search_text'] = google_places.GooglePlacesParser(
             api_key=settings.GOOGLE_PLACES_API)\
                 .generate_search_text(data)
-    mongo_manager.save(data, "places")
-    return data
+    
+    # Create embeddings for the location
+    data_with_embeddings = create_location_embeddings.delay(data)
+    return data_with_embeddings
+
+@shared_task
+def create_location_embeddings(location_data: dict) -> Dict:
+    """
+    Creates embeddings for a location using the collected data.
+    
+    Args:
+        location_data: Dictionary containing location information including:
+             
+    Returns:
+        Dictionary with the original data plus the embedding
+    """
+    try:
+        embedder = RussianBERTEmbedder()
+        # Generate and Add embedding to the location data
+        location_data['embedding'] = embedder.text_to_embedding(location_data['search_text'] \
+                                                                + ' ' + location_data['reviews_flattened']).tolist()
+        mongo_manager.save(location_data, "places")
+        return location_data
+        
+    except Exception as e:
+        logging.error(f"Error creating embeddings for location: {e}")
+        return location_data

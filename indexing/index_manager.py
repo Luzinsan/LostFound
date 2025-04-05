@@ -6,10 +6,12 @@ import os
 import nltk
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union, Tuple
+from parsers import google_places
 from indexing.wildcard_handler import WildcardHandler
 from indexing.spell_checker import SpellChecker
 from nltk.stem.snowball import SnowballStemmer
 from utils.mongodb_handler import MongoDBManager
+from config import settings
 
 class IndexManager:
     """
@@ -180,10 +182,16 @@ class IndexManager:
             }
 
             for location_data in locations_data:
-                search_text = location_data.get('search_text', '')
+                # Get or generate search_text
+                search_text = location_data.get('search_text', '') #+ ' ' + location_data.get('reviews_flattened', '')
                 if not search_text:
-                    logging.warning(f"[IndexManager] Location without search_text found in {city_name}, skipping.")
-                    continue
+                    # If search_text doesn't exist, generate it
+                    search_text = google_places.GooglePlacesParser(
+                        api_key=settings.GOOGLE_PLACES_API).generate_search_text(location_data)
+                    # Update the MongoDB record
+                    location_data['search_text'] = search_text
+                    mongo_manager.save(location_data, "places")
+                    search_text += ' ' + location_data.get('reviews_flattened', '')
                 
                 self.build_index(city_name, location_data['_id'], search_text)
 
@@ -278,5 +286,5 @@ class IndexManager:
                 for doc_id, score in sorted(results.items(), key=lambda x: x[1], reverse=True)
             ], tokens
         except Exception as e:
-            logging.error(f"Error searching index for query '{query}' in city {city_name}: {e}")
+            logging.error(f"[IndexManager]: Error searching index for query '{query}' in city {city_name}: {e}")
             return []

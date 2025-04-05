@@ -41,7 +41,8 @@ def run_search_tests():
         {"name": "Wildcard search - prefix", "city": settings.CITIES[0], "query": "музе*", "limit": 5},
         {"name": "Wildcard search - suffix", "city": settings.CITIES[0], "query": "*театр", "limit": 5},
         {"name": "Wildcard search - middle", "city": settings.CITIES[0], "query": "рест*ран", "limit": 5},
-        {"name": "Wildcard search - spellcheck", "city": settings.CITIES[0], "query": "reestorent", "limit": 5},
+        {"name": "Wildcard search - spellcheck", "city": settings.CITIES[1], "query": "reestorent", "limit": 5},
+        {"name": "Embedding search", "city": settings.CITIES[1], "query": "внусно поесть", "limit": 5},
         {"name": "Multi-city search", "query": "парк", "cities": settings.CITIES, "limit": 10}
     ]
     

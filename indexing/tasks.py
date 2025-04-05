@@ -1,14 +1,13 @@
 import logging
-import time
-import math
 from celery import group
 from config import settings
 from utils.mongodb_handler import mongo_manager
-from parsers import google_places
 from indexing.index_manager import IndexManager
-from indexing.wildcard_handler import WildcardHandler
 from typing import List
 from celery_app import app
+from embeddings.BERT_ru import RussianBERTEmbedder
+from indexing.utils import cosine_similarity, combine_scores, normalize_scores
+import numpy as np
 
 @app.task
 def build_location_index_task(location_id: str) -> dict:
@@ -26,16 +25,6 @@ def build_location_index_task(location_id: str) -> dict:
         
         location_data = location_data[0]
         city = location_data.get('city', 'unknown')
-        
-        # Get or generate search_text
-        search_text = location_data.get('search_text', '')
-        if not search_text:
-            # If search_text doesn't exist, generate it
-            search_text = google_places.GooglePlacesParser(
-                api_key=settings.GOOGLE_PLACES_API).generate_search_text(location_data)
-            # Update the MongoDB record
-            location_data['search_text'] = search_text
-            mongo_manager.save(location_data, "places")
         
         # Use IndexManager to build and save index
         index_manager = IndexManager()
@@ -162,6 +151,7 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
     """
     Searches the inverted index for the given query within a specific city.
     Supports wildcard queries using the "*" character (e.g. "rest*" for restaurants).
+    Uses both TF-IDF and embedding similarity for ranking.
     
     Args:
         city: The city to search in
@@ -173,6 +163,9 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
     """
     try:
         logging.info(f"[Task] Searching for '{query}' in city: {city}")
+        
+        # Generate query embedding
+        query_embedding = RussianBERTEmbedder().text_to_embedding(query)
         
         # Use IndexManager to load city index
         index_manager = IndexManager()
@@ -187,7 +180,7 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
         # Use IndexManager to perform search
         results, query_tokens = index_manager.search(city, query)
         
-        # Get additional document details from MongoDB
+        # Get additional document details from MongoDB and calculate embedding scores
         for result in results:
             doc_id = result["doc_id"]
             doc_data = mongo_manager.load({"_id": doc_id}, "places")
@@ -199,6 +192,33 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
                     "types": doc_data.get("types", []),
                     "summary": doc_data.get("editorialSummary", 'Unknown')
                 })
+                
+                # Calculate embedding similarity if document has embedding
+                if 'embedding' in doc_data:
+                    doc_embedding = np.array(doc_data['embedding'])
+                    embedding_score = cosine_similarity(query_embedding, doc_embedding)
+                    result['embedding_score'] = embedding_score
+                else:
+                    result['embedding_score'] = 0.0
+        
+        # Normalize TF-IDF scores
+        tfidf_scores = [result['score'] for result in results]
+        normalized_tfidf_scores = normalize_scores(tfidf_scores)
+        
+        # Normalize embedding scores
+        embedding_scores = [result['embedding_score'] for result in results]
+        normalized_embedding_scores = normalize_scores(embedding_scores)
+        
+        # Combine scores and update results
+        for i, result in enumerate(results):
+            combined_score = combine_scores(
+                normalized_tfidf_scores[i],
+                normalized_embedding_scores[i]
+            )
+            result['combined_score'] = combined_score
+        
+        # Sort by combined score
+        results.sort(key=lambda x: x['combined_score'], reverse=True)
         
         # Limit results
         limited_results = results[:limit]

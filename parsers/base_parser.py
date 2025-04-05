@@ -8,4 +8,4 @@ class BaseParser(abc.ABC):
         pass
 
     def clean_string(self, string: str) -> str:
-        return re.sub(r'\s+|\n+|\t+', ' ', string).strip()
+        return re.sub(r'\s+|\n+|\t+', ' ', string).strip().replace("ё", "е").lower()

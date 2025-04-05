@@ -24,6 +24,8 @@ class Review(BaseModel):
 class SearchedPlace(BasePlace):
     """Model representing a place with search-specific information."""
     score: float = Field(..., description="Search relevance score")
+    embedding_score: float = Field(..., description="Embedding relevance score")
+    combined_score: float = Field(..., description="Combined relevance score")
 
 class DetailedPlace(BasePlace):
     """Model representing a place with detailed information."""
