@@ -5,7 +5,7 @@
 # sudo systemctl status redis 
 
 # running celery workers
-uv run celery -A parsers.tasks worker --loglevel=info -E
+uv run celery -A celery_app worker --loglevel=error
 
 # Then
 uv run main.py

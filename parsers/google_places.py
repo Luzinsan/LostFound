@@ -145,7 +145,7 @@ class GooglePlacesParser(BaseParser):
                     if not \
                         (attr in priority_fields 
                          or attr.startswith('_') 
-                         or attr in {'id', 'timestamp_response','websiteUri','reviews','timestamp_scraping'}):
+                         or attr in {'id', 'timestamp_response','websiteUri','reviews','reviews_flattened','timestamp_scraping'}):
                         search_terms.append(process_value(attr, value))
             except Exception as e:
                 logging.error(f"Error processing additional fields: {e}")
@@ -208,6 +208,7 @@ class GooglePlacesParser(BaseParser):
                 break
             for place in places_data_per_page:
                 place['_id'] = place.pop('id')
+                place['city'] = city
                 for field in ['displayName','editorialSummary','primaryTypeDisplayName','priceRange']:
                     if field in place.keys():
                         if field == 'priceRange':
@@ -226,7 +227,7 @@ class GooglePlacesParser(BaseParser):
                         else:
                             place[field] = place[field].get('text',None) 
                 if place.get('reviews', None):
-                    place['reviews'] = self.process_reviews_for_embeddings(place['reviews'])
+                    place['reviews_flattened'] = self.process_reviews_for_embeddings(place['reviews'])
 
             mongo_manager.save(places_data_per_page, "places")
             for place in places_data_per_page:

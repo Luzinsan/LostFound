@@ -13,10 +13,10 @@ logging.basicConfig(level=logging.INFO if settings.DEBUG_MODE else logging.ERROR
 
 def main():
     # Start data parsing
-    # logging.info("Starting data parsing...")
-    # task_group = group(parse_city_task.s(city) for city in settings.CITIES)
-    # result = task_group.apply_async()
-    # results = result.get()
+    logging.info("Starting data parsing...")
+    task_group = group(parse_city_task.s(city) for city in settings.CITIES)
+    result = task_group.apply_async()
+    results = result.get()
     
     # Start indexing after parsing completes
     logging.info("Starting data indexing...")
