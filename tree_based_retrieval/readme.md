@@ -1,11 +1,10 @@
 **Why Ball Tree?**  
 - Supports **cosine distance**.  
-- Efficient for **high-dimensional data** (e.g., BERT embeddings).  
-- Integrates easily with `scikit-learn`.  
+- Efficient for **high-dimensional data** (e.g., BERT embeddings that we use).  
 
 - **Metric**: Cosine distance aligns with semantic similarity.  
 - **Scalability**: Handles 10k+ items with sub-second query times.  
-- **Dimensionality**: Optimized for high-dimensional spaces (BERT’s 768D).  
+- **Dimensionality**: Optimized for high-dimensional spaces
 
 **Comparison to Alternatives**:  
 | Method      | Pros                          | Cons                          |  
