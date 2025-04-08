@@ -75,9 +75,7 @@ This algorithm generates dense vector representations (embeddings) for Russian t
 1. **Mean Pooling** (`pooling='mean'`):  
    - Compute the average of all token embeddings (including padding tokens).  
    - **Formula**:  
-     \[
-     \text{embedding} = \frac{1}{N} \sum_{i=1}^{N} \text{token}_i
-     \]
+    embedding = 1/N sum(token_i)
    - **Limitation**: May include irrelevant padding tokens.  
 
 2. **CLS Pooling** (`pooling='cls'`):  
@@ -90,7 +88,7 @@ This algorithm generates dense vector representations (embeddings) for Russian t
 **Result:**  
 - A fixed-dimensional numpy array representing the text embedding.  
 - **Dimensions**:  
-  - `rubert-tiny2`: 312 dimensions.  
+  - `rubert-tiny2`: 312 dimensions - we use this one
   - `rubert-base-cased`: 768 dimensions.  
 
 ---
@@ -102,11 +100,6 @@ This algorithm generates dense vector representations (embeddings) for Russian t
    - `pooling`: Choose based on task (e.g., `mean` for sentence similarity, `cls` for classification).  
 
 
-### **Applications**
-- Semantic search  
-- Text classification  
-- Clustering  
-- Recommendation systems  
 
 ### **Limitations**
 - Mean pooling includes padding tokens (use attention masks for improvement).  
