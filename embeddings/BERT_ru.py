@@ -31,7 +31,7 @@ class RussianBERTEmbedder:
             return_tensors='pt',
             padding=True,
             truncation=True,
-            max_length=512
+            max_length=312
         )
         
         with torch.no_grad():
