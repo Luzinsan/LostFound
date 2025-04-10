@@ -5,8 +5,8 @@ from indexing.tasks import search_index_task, search_all_cities_task
 from models import SearchResponse
 
 router = APIRouter(
-    prefix="/search",
-    tags=["search"],
+    prefix="/index_search",
+    tags=["index_search"],
     responses={404: {"description": "Not found"}},
 )
 
@@ -17,15 +17,25 @@ async def search_city(
     limit: int = Query(10, ge=1, le=50, description="Number of results to return")
 ) -> SearchResponse:
     """
-    Search for places in a specific city.
+    Search for places in a specific city using inverted index.
+    
+    Features:
+    * 🔍 Keyword-based search support
+    * 🎯 TF-IDF based ranking
+    * 🔄 Wildcard search support (e.g., "rest*" for restaurants)
+    * 📊 Automatic query correction
     
     Args:
         city: City to search in
-        query: Search query
-        limit: Maximum number of results to return (1-50)
+        query: Search query (supports wildcard characters)
+        limit: Maximum number of results (1-50)
         
     Returns:
-        SearchResponse containing the search results
+        SearchResponse containing:
+        * List of found places with detailed information
+        * Total number of results found
+        * Query tokens used
+        * Wildcard search usage information
     """
     if city not in settings.CITIES:
         raise HTTPException(
@@ -51,15 +61,26 @@ async def search_all_cities(
     limit: int = Query(10, ge=1, le=50, description="Number of results to return")
 ) -> SearchResponse:
     """
-    Search for places across multiple cities.
+    Search for places across all available cities using inverted index.
+    
+    Features:
+    * 🌍 Parallel search across all specified cities
+    * 🔍 Keyword-based search support
+    * 🎯 TF-IDF based ranking
+    * 🔄 Wildcard search support
+    * 📊 Automatic query correction
     
     Args:
-        query: Search query
-        cities: List of cities to search in (optional)
-        limit: Maximum number of results to return (1-50)
+        query: Search query (supports wildcard characters)
+        cities: List of cities to search in (if not provided, searches in all cities)
+        limit: Maximum number of results (1-50)
         
     Returns:
-        SearchResponse containing the search results
+        SearchResponse containing:
+        * List of found places with detailed information
+        * Total number of results found across all cities
+        * Query tokens used
+        * Wildcard search usage information
     """
     if cities is None:
         cities = settings.CITIES

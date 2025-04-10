@@ -5,7 +5,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 import logging
 from config import settings
-from routers import search, system, locations
+from routers import search, system, locations, semantic_search
 from models import ErrorResponse
 
 # Set up logging
@@ -17,29 +17,55 @@ logging.basicConfig(
 app = FastAPI(
     title="Lost&Found API",
     description="""
-    Lost&Found API предоставляет интерфейс для поиска различных мест и достопримечательностей в разных городах.
+    # 🌟 Lost&Found API: Advanced Search Engine for Places and Landmarks 🌟
     
-    ## Основные возможности
+    Welcome to the Lost&Found API, a powerful and versatile search engine designed to help you discover interesting places and landmarks across multiple cities. Our API combines cutting-edge search technologies to deliver fast, accurate, and contextually relevant results.
     
-    * 🔍 Поиск мест в конкретном городе
-    * 🌍 Поиск по всем доступным городам
-    * 🏛️ Фильтрация по типам мест (музеи, рестораны, парки и т.д.)
-    * 📊 Получение статистики и системной информации
-    * 📄 Пагинация и фильтрация списка мест
-    * ℹ️ Подробная информация о каждом месте
+    ## 🔍 Advanced Search Technologies
     
-    ## Типы мест
+    ### 📚 Inverted Index Search
+    Our traditional search engine uses sophisticated inverted index technology to provide lightning-fast keyword-based searches. This approach excels at:
+    * Precise matching of place names, addresses, and descriptions
+    * Efficient filtering by place types and categories
+    * Support for wildcard searches and partial matches
+    * Optimized for exact queries and structured data
     
-    * Рестораны и кафе
-    * Музеи и галереи
-    * Парки и зоны отдыха
-    * Театры и концертные залы
-    * Исторические достопримечательности
+    ### 🧠 Semantic Search with Embeddings
+    Our semantic search engine leverages state-of-the-art embedding technology to understand the meaning behind your queries, not just the keywords. This powerful approach enables:
+    * Natural language understanding for more intuitive searches
+    * Finding places based on concepts and ideas, not just exact terms
+    * Discovering semantically related places even when using different words
+    * Understanding context and intent behind your search queries
     
-    ## Использование
+    ## 🌍 Comprehensive Coverage
     
-    API поддерживает различные параметры поиска и фильтрации. Для получения подробной информации 
-    о каждом эндпоинте используйте интерактивную документацию ниже.
+    * 🔍 Search places in a specific city
+    * 🌐 Search across all available cities
+    * 🏛️ Filter by place types (museums, restaurants, parks, etc.)
+    * 📊 Get statistics and system information
+    * 📄 Pagination and place list filtering
+    * ℹ️ Detailed information about each place
+    
+    ## 🏢 Place Types
+    
+    * 🍽️ Restaurants and cafes
+    * 🏛️ Museums and galleries
+    * 🌳 Parks and recreation areas
+    * 🎭 Theaters and concert halls
+    * ⛪ Historical landmarks
+    
+    ## 🚀 Performance & Scalability
+    
+    Our search engines are built for performance and scalability:
+    * Inverted index search delivers results in milliseconds
+    * Ball tree structure enables efficient similarity search
+    * Distributed architecture handles high query volumes
+    * Caching mechanisms for frequently accessed data
+    
+    ## 📖 Usage
+    
+    The API supports various search and filtering parameters. For detailed information 
+    about each endpoint, use the interactive documentation below.
     """,
     version="1.0.0",
     contact={
@@ -73,11 +99,6 @@ app.add_middleware(
 
 # Include routers
 app.include_router(
-    search.router,
-    prefix="/api/v1",
-    tags=["search"]
-)
-app.include_router(
     system.router,
     prefix="/api/v1",
     tags=["system"]
@@ -86,6 +107,16 @@ app.include_router(
     locations.router,
     prefix="/api/v1",
     tags=["locations"]
+)
+app.include_router(
+    search.router,
+    prefix="/api/v1",
+    tags=["index_search"]
+)
+app.include_router(
+    semantic_search.router,
+    prefix="/api/v1",
+    tags=["semantic_search"]
 )
 
 @app.get("/docs", include_in_schema=False)
@@ -112,16 +143,20 @@ def custom_openapi():
     
     openapi_schema["tags"] = [
         {
-            "name": "search",
-            "description": "Операции поиска мест и достопримечательностей",
-        },
-        {
             "name": "system",
-            "description": "Системные операции и управление",
+            "description": "System operations and management",
         },
         {
             "name": "locations",
-            "description": "Управление и получение информации о местах",
+            "description": "Management and information retrieval about places",
+        },
+        {
+            "name": "index_search",
+            "description": "Lightning-fast keyword-based search using inverted index technology",
+        },
+        {
+            "name": "semantic_search",
+            "description": "Intelligent semantic search using embedding technology and ball tree structure",
         },
     ]
     
@@ -133,7 +168,7 @@ app.openapi = custom_openapi
 @app.get("/", tags=["root"])
 async def root():
     return {
-        "message": "Добро пожаловать в Lost&Found API",
+        "message": "Welcome to Lost&Found API",
         "version": app.version,
         "documentation": {
             "swagger": "/docs",
@@ -148,11 +183,11 @@ async def health_check():
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    logging.error(f"Необработанное исключение: {str(exc)}", exc_info=True)
+    logging.error(f"Unhandled exception: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content=ErrorResponse(
-            detail="Произошла непредвиденная ошибка",
+            detail="An unexpected error occurred",
             status_code=500
-        ).dict()
+        )
     ) 

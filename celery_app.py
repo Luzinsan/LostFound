@@ -9,5 +9,5 @@ app = Celery('lost_found',
 # Configure Celery
 app.conf.update(
     broker_connection_retry_on_startup=True,
-    imports=['parsers.tasks', 'indexing.tasks']
+    imports=['parsers.tasks', 'indexing.tasks', 'tree_based_retrieval.tasks']
 ) 
