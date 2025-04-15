@@ -1,4 +1,5 @@
 import logging
+import aiohttp
 from telegram.constants import ParseMode
 from telegram import (
     Update,
@@ -14,13 +15,9 @@ from telegram.ext import (
     ConversationHandler,
     CallbackQueryHandler,
     filters,
-    JobQueue,
 )
 
-from indexing.tasks import search_index_task, search_all_cities_task
-from celery.result import AsyncResult
-
-TELEGRAM_BOT_TOKEN = "7734880573:AAEbhW6NXoz3DtXkpjAT-BEJGGR4vzRfkWk"
+TELEGRAM_BOT_TOKEN = ""
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -28,16 +25,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ----------- Глобальные константы / состояния для ConversationHandler -----------
 ST_CITY = 1
 ST_TYPE = 2
 ST_QUERY = 3
 
 AVAILABLE_CITIES = ["Москва", "Санкт-Петербург", "Нижний Новгород"]
 AVAILABLE_TYPES = [
-    "restaurant","cafe","tourist_attraction","museum","performing_arts_theater",
-    "historical_place","art_gallery","park","lodging","church"
+    "restaurant", "cafe", "tourist_attraction", "museum", "performing_arts_theater",
+    "historical_place", "art_gallery", "park", "lodging", "church"
 ]
+
+API_BASE = ""
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -51,6 +49,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         "Просто напиши сообщение, и я выдам подсказку!"
     )
 
+
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Список доступных команд:\n"
@@ -58,8 +57,9 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/searchall <запрос> - поиск по всем городам\n"
         "/startsearch - пошаговый диалоговый поиск\n"
         "/help - помощь по командам\n"
-        "Пример: /search Москва museum\n"
+        "Пример: /search Москва museum"
     )
+
 
 async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
@@ -70,9 +70,10 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         city = args[0]
         query = " ".join(args[1:])
-        # Синхронный вызов
-        task_result = search_index_task.delay(city, query, limit=10)
-        response = task_result.get(timeout=15)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{API_BASE}/index_search/city/{city}", params={"query": query, "limit": 10}) as resp:
+                response = await resp.json()
 
         if response and response.get("status") == "success":
             results = response.get("results", [])
@@ -82,7 +83,7 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             for idx, place in enumerate(results[:10], start=1):
                 name = place.get("name", "???")
                 address = place.get("address", "")
-                score = place.get("combined_score", 0)
+                score = place.get("score", 0)
                 summary = place.get("summary", "")
                 message_text += (
                     f"\n<b>{idx}. {name}</b>\n"
@@ -108,8 +109,11 @@ async def search_all_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return
 
         query = " ".join(args)
-        task_result = search_all_cities_task.delay(query, limit=10)
-        response = task_result.get(timeout=20)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{API_BASE}/index_search/all", params={"query": query, "limit": 10}) as resp:
+                response = await resp.json()
+
 
         if response and response.get("status") == "success":
             results = response.get("results", [])
@@ -120,7 +124,7 @@ async def search_all_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 city = place.get("city", "???")
                 name = place.get("name", "???")
                 address = place.get("address", "")
-                score = place.get("combined_score", 0)
+                score = place.get("score", 0)
                 summary = place.get("summary", "")
                 message_text += (
                     f"\n<b>{idx}. {name}</b> ({city})\n"
@@ -138,84 +142,24 @@ async def search_all_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await update.message.reply_text("Произошла ошибка при поиске (см. логи).")
 
 
-async def check_task_result(context: ContextTypes.DEFAULT_TYPE):
-    """
-    Ф-ция для JobQueue: проверяет готовность задачи Celery.
-    Если готова — отправляет результат в чат, иначе перезапускается.
-    """
-    job_data = context.job.data  # словарь
-    task_id = job_data["task_id"]
-    chat_id = job_data["chat_id"]
-
-    # Достаем результат
-    res = AsyncResult(id=task_id)
-    if res.ready():
-        # Если задача завершена — получаем результат
-        response = res.get()
-        if response and response.get("status") == "success":
-            results = response.get("results", [])
-            total_found = response.get("total_found", 0)
-            msg = f"Готово! Найдено результатов: {total_found}\n"
-            for idx, place in enumerate(results[:10], start=1):
-                name = place.get("name", "???")
-                address = place.get("address", "")
-                score = place.get("combined_score", 0)
-                summary = place.get("summary", "")
-                msg += (
-                    f"\n<b>{idx}. {name}</b>\n"
-                    f"Адрес: {address}\n"
-                    f"Скор: {score:.2f}\n"
-                    f"{summary}\n"
-                )
-            await context.bot.send_message(
-                chat_id=chat_id, text=msg, parse_mode=ParseMode.HTML
-            )
-        else:
-            # Задача закончилась, но вернула ошибку
-            err_msg = response.get("message", "Ошибка") if response else "Неизвестная ошибка"
-            await context.bot.send_message(chat_id=chat_id, text=f"Ошибка: {err_msg}")
-        # Снимаем задачу с JobQueue, чтобы не перезапускать проверку
-        context.job.schedule_removal()
-    else:
-        # Еще не готово — повторим через 5 секунд
-        await context.bot.send_message(chat_id=chat_id, text="Поиск ещё продолжается...")
-        context.job_queue.run_once(
-            check_task_result,
-            when=5,
-            data=job_data
-        )
-
-
 async def startsearch_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Запуск «диалогового» поиска. Спросим у пользователя город.
-    """
-    await update.message.reply_text(
-        "Начинаем пошаговый поиск.\nВыберите город:",
-    )
-    # Выведем inline-кнопки с тремя городами
-    buttons = [
-        [InlineKeyboardButton(city, callback_data=city)] for city in AVAILABLE_CITIES
-    ]
+    await update.message.reply_text("Начинаем пошаговый поиск.\nВыберите город:")
+    buttons = [[InlineKeyboardButton(city, callback_data=city)] for city in AVAILABLE_CITIES]
     markup = InlineKeyboardMarkup(buttons)
     await update.message.reply_text("Выберите город:", reply_markup=markup)
     return ST_CITY
 
+
 async def city_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Пользователь нажал на inline-кнопку с городом.
-    """
     query = update.callback_query
-    await query.answer()  # обязательно, чтобы Telegram не «висел»
-    chosen_city = query.data  # одно из AVAILABLE_CITIES
+    await query.answer()
+    chosen_city = query.data
     context.user_data["chosen_city"] = chosen_city
 
-    # Предлагаем выбрать тип места
     buttons = []
     row = []
     for i, place_type in enumerate(AVAILABLE_TYPES, start=1):
         row.append(InlineKeyboardButton(place_type, callback_data=place_type))
-        # сделаем сетку 2 x N
         if i % 2 == 0:
             buttons.append(row)
             row = []
@@ -229,11 +173,8 @@ async def city_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     )
     return ST_TYPE
 
+
 async def type_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Пользователь выбрал тип места (inline-кнопка).
-    Теперь попросим ввести что-то текстом (доп. запрос).
-    """
     query = update.callback_query
     await query.answer()
     chosen_type = query.data
@@ -246,73 +187,62 @@ async def type_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     )
     return ST_QUERY
 
+
 async def query_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Пользователь ввел дополнительный текст запроса.
-    """
     user_text = update.message.text
     context.user_data["additional_query"] = user_text
-
-    await update.message.reply_text(
-        "Принято! Запускаю поиск асинхронно..."
-    )
-    # Запустим Celery-задачу
-    city = context.user_data["chosen_city"]
-    place_type = context.user_data["chosen_type"]
-    additional = context.user_data["additional_query"]
-
-    # Собираем общий query. Условно place_type + additional
-    # Если user_text пуст, пусть будет просто place_type
-    full_query = f"{place_type} {additional}".strip()
-
-    task = search_index_task.delay(city, full_query, limit=10)
-    task_id = task.id
-
-    # Добавим задачу в JobQueue, будем чекать каждые 5 сек
-    context.job_queue.run_once(
-        check_task_result,
-        when=5,
-        data={"task_id": task_id, "chat_id": update.effective_chat.id}
-    )
-    # Завершаем conversation
+    await run_inline_search(update, context)
     return ConversationHandler.END
+
 
 async def skip_query(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Пользователь пропускает ввод доп.запроса.
-    """
     context.user_data["additional_query"] = ""
-    await update.message.reply_text("Ок, без уточняющего запроса. Запускаю поиск...")
-
-    city = context.user_data["chosen_city"]
-    place_type = context.user_data["chosen_type"]
-    full_query = place_type
-
-    task = search_index_task.delay(city, full_query, limit=10)
-    task_id = task.id
-
-    # Запускаем асинхронную проверку
-    context.job_queue.run_once(
-        check_task_result,
-        when=5,
-        data={"task_id": task_id, "chat_id": update.effective_chat.id}
-    )
-
+    await run_inline_search(update, context)
     return ConversationHandler.END
 
+
+async def run_inline_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    city = context.user_data.get("chosen_city")
+    place_type = context.user_data.get("chosen_type")
+    additional = context.user_data.get("additional_query", "")
+    full_query = f"{place_type} {additional}".strip()
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"{API_BASE}/index_search/city/{city}", params={"query": full_query, "limit": 10}) as resp:
+                response = await resp.json()
+
+
+        if response and response.get("status") == "success":
+            results = response.get("results", [])
+            total_found = response.get("total_found", 0)
+            msg = f"Готово! Найдено результатов: {total_found}\n"
+            for idx, place in enumerate(results[:10], start=1):
+                name = place.get("name", "???")
+                address = place.get("address", "")
+                score = place.get("score", 0)
+                summary = place.get("summary", "")
+                msg += (
+                    f"\n<b>{idx}. {name}</b>\n"
+                    f"Адрес: {address}\n"
+                    f"Скор: {score:.2f}\n"
+                    f"{summary}\n"
+                )
+            await update.message.reply_text(msg, parse_mode=ParseMode.HTML)
+        else:
+            err_msg = response.get("message", "Ошибка") if response else "Неизвестная ошибка"
+            await update.message.reply_text(f"Ошибка: {err_msg}")
+    except Exception as e:
+        logger.exception("run_inline_search error:")
+        await update.message.reply_text("Произошла ошибка при поиске.")
+
+
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """
-    Если пользователь введет /cancel в любой момент, прерываем диалог.
-    """
     await update.message.reply_text("Поиск отменен.")
     return ConversationHandler.END
 
 
 async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """
-    Любое текстовое сообщение, которое не попало в команду/хендлер.
-    Просто логируем и даем подсказку.
-    """
     user_text = update.message.text
     logger.debug(f"Пришло произвольное сообщение: {user_text!r}")
     await update.message.reply_text(
@@ -325,11 +255,9 @@ def main():
     application = (
         Application.builder()
         .token(TELEGRAM_BOT_TOKEN)
-        # .persistence(persistence)
         .build()
     )
 
-    # --- ConversationHandler для пошагового поиска ---
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("startsearch", startsearch_command)],
         states={
@@ -348,14 +276,9 @@ def main():
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("search", search_command))
     application.add_handler(CommandHandler("searchall", search_all_command))
-
-    # Добавляем диалог
     application.add_handler(conv_handler)
-
-    # Общий обработчик для всего текста, который «не поймали» другие хендлеры
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, text_handler))
 
-    # Запуск
     application.run_polling()
     logger.info("Bot started!")
 
