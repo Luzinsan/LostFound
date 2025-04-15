@@ -90,7 +90,7 @@ Travelers often struggle to find destinations that truly match their unique inte
    .venv\Scripts\activate
 
    # Install dependencies
-   uv pip install -r requirements.txt
+   uv sync
    ```
 
 5. **Configure Environment**

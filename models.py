@@ -24,8 +24,6 @@ class Review(BaseModel):
 class SearchedPlace(BasePlace):
     """Model representing a place with search-specific information."""
     score: float = Field(..., description="Search relevance score")
-    embedding_score: float = Field(..., description="Embedding relevance score")
-    combined_score: float = Field(..., description="Combined relevance score")
 
 class DetailedPlace(BasePlace):
     """Model representing a place with detailed information."""
@@ -38,7 +36,7 @@ class SearchResponse(BaseModel):
     """Model representing the response from a search operation."""
     status: str = Field(..., description="Status of the search operation")
     results: List[SearchedPlace] = Field(..., description="List of search results")
-    total_found: int = Field(..., description="Total number of matches found")
+    total_found: Optional[int] = Field(..., description="Total number of matches found")
     query_tokens: Optional[List[str]] = Field(None, description="Tokens used in the search query")
     wildcard_used: Optional[bool] = Field(None, description="Whether wildcard search was used")
     message: Optional[str] = Field(None, description="Additional message about the search")

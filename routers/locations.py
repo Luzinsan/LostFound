@@ -57,16 +57,6 @@ async def list_locations(
                 detail=f"Invalid city: {filters.city}. Available cities: {', '.join(settings.CITIES)}"
             )
         
-        # Validate place types if provided
-        # if filters.types:
-        #     invalid_types = [t for t in filters.types if t not in settings.PLACE_TYPES]
-        #     if invalid_types:
-        #         raise HTTPException(
-        #             status_code=400,
-        #             detail=f"Invalid place types: {', '.join(invalid_types)}. "
-        #                   f"Available types: {', '.join(settings.PLACE_TYPES)}"
-        #         )
-        
         # Build MongoDB query
         query = {}
         if filters.city:

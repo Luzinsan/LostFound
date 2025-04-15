@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Union
 from pymongo import MongoClient, errors, UpdateOne
 from pymongo.collection import Collection
 from config import settings
+import numpy as np
 
 class MongoDBManager:
     """
@@ -20,20 +21,25 @@ class MongoDBManager:
         """
         Initializes the MongoDBManager with the provided URI and database name.
         """
-        self.client = MongoClient(uri)
-        self.db = self.client[db_name]
-        self.collections = {
-            "cities": {
-                "collection": self.db["cities"], 
-                "index": "city"},
-            "places": {
-                "collection": self.db["places"], 
-                "index": "_id"},
-            "city_indices": {
-                "collection": self.db["city_indices"], 
-                "index": "_id"},
-        }
-        self._ensure_indexes()
+        try:
+            self.client = MongoClient(uri)
+            self.db = self.client[db_name]
+            self.collections = {
+                "cities": {
+                    "collection": self.db["cities"], 
+                    "index": "city"},
+                "places": {
+                    "collection": self.db["places"], 
+                    "index": "_id"},
+                "city_indices": {
+                    "collection": self.db["city_indices"], 
+                    "index": "_id"},
+            }
+            self._ensure_indexes()
+            logging.info("MongoDB connection established")
+        except Exception as e:
+            logging.error(f"Failed to connect to MongoDB: {e}")
+            raise
 
     def _ensure_indexes(self) -> None:
         """
@@ -212,5 +218,18 @@ class MongoDBManager:
         """
         self.client.close()
         logging.info("Connection to MongoDB closed.")
+
+    @staticmethod
+    def convert_to_float(obj):
+        """Рекурсивно конвертирует numpy типы в float для сохранения в MongoDB"""
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, (list, np.ndarray)):
+            return [MongoDBManager.convert_to_float(x) for x in obj]
+        elif isinstance(obj, dict):
+            return {k: MongoDBManager.convert_to_float(v) for k, v in obj.items()}
+        return obj
 
 mongo_manager = MongoDBManager()
