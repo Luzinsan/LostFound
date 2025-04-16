@@ -5,7 +5,7 @@ import requests
 from urllib.parse import quote
 
 class RussianBERTEmbedder:
-    def __init__(self, model_name='cointegrated/rubert-tiny2', device=None, translate_en=False):
+    def __init__(self, model_name='cointegrated/rubert-tiny2', device=None, translate_en=True):
         self.translate_en = translate_en
         self.device = device or 'cpu'
         

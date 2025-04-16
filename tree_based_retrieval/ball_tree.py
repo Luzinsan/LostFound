@@ -271,7 +271,7 @@ class SimilaritySearchEngine:
             while best:
                 sim, idx = heapq.heappop(best)
                 if idx is not None:
-                    results[self.item_ids[idx]] = float(-sim)
+                    results[self.item_ids[idx]] = float(sim)
             
             return dict(sorted(results.items(), key=lambda x: x[1], reverse=True)[:top_k])
         except Exception as e:
