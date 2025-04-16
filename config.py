@@ -1,11 +1,13 @@
-from pydantic_settings import BaseSettings
-from typing import List, Optional
+import os
+from typing import List
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # https://docs.pydantic.dev/latest/concepts/pydantic_settings/#usage
 class Settings(BaseSettings):
     OPENTRIPMAP_API_KEY: str
     GOOGLE_PLACES_API: str
     TELEGRAM_BOT_API: str
+    API_BASE: str
     CITIES: List[str]
     # https://developers.google.com/maps/documentation/places/web-service/place-types
     PLACE_TYPES: List[str] = ["restaurant","cafe","tourist_attraction","museum","performing_arts_theater","historical_place","art_gallery","park","lodging","church"]
@@ -36,7 +38,7 @@ class Settings(BaseSettings):
     RESULT_BACKEND: str = 'redis://localhost:6379/0'
 
     class Config:
-        env_file = ".env"
+        env_file = os.path.join(os.path.dirname(__file__), ".env")
 
 
 settings = Settings()
