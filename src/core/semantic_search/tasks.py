@@ -1,6 +1,6 @@
 import logging
 from celery import group
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import numpy as np
 
 import sys, os
@@ -90,9 +90,15 @@ def build_all_cities_ball_trees_task() -> dict:
         return {"status": "error", "message": str(e)}
 
 @app.task
-def search_ball_tree_task(city: str, query: str, limit: int = 10) -> dict:
+def search_ball_tree_task(city: str, query: str, limit: int = 10, types: Optional[List[str]] = None) -> dict:
     """
     Searches using the ball tree for the given query within a specific city.
+    
+    Args:
+        city: The city to search in
+        query: The natural language search query
+        limit: Maximum number of results to return
+        types: Optional list of place types to filter by
     """
     try:
         logging.info(f"[Task] Searching for '{query}' in city: {city}")
@@ -145,7 +151,14 @@ def search_ball_tree_task(city: str, query: str, limit: int = 10) -> dict:
         detailed_results = []
         for doc_id, score in results.items():
             try:
-                doc_data = mongo_manager.load({"_id": doc_id}, "places")
+                # Базовый фильтр для документа
+                mongo_filter = {"_id": doc_id}
+                
+                # Добавляем фильтр по типам, если указан
+                if types and len(types) > 0:
+                    mongo_filter["types"] = {"$in": types}
+                
+                doc_data = mongo_manager.load(mongo_filter, "places")
                 if doc_data:
                     doc_data = doc_data[0]
                     detailed_results.append({
@@ -178,9 +191,15 @@ def search_ball_tree_task(city: str, query: str, limit: int = 10) -> dict:
         }
 
 @app.task
-def search_all_cities_ball_tree_task(query: str, cities: List[str] = None, limit: int = 10) -> dict:
+def search_all_cities_ball_tree_task(query: str, cities: List[str] = None, limit: int = 10, types: Optional[List[str]] = None) -> dict:
     """
     Searches for the query across all specified cities using ball trees.
+    
+    Args:
+        query: The natural language search query
+        cities: List of cities to search in (if None, all cities in settings.CITIES are used)
+        limit: Maximum number of results to return per city
+        types: Optional list of place types to filter by
     """
     try:
         # Use all cities from settings if none specified
@@ -192,7 +211,7 @@ def search_all_cities_ball_tree_task(query: str, cities: List[str] = None, limit
         # Search in each city
         tasks = []
         for city in cities:
-            tasks.append(search_ball_tree_task.s(city, query, limit))
+            tasks.append(search_ball_tree_task.s(city, query, limit, types))
             
         # Execute all search tasks in parallel
         task_group = group(tasks)

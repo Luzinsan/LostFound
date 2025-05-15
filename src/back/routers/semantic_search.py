@@ -21,6 +21,7 @@ router = APIRouter(
 async def semantic_search_city(
     city: str,
     query: str,
+    types: Optional[List[str]] = Query(None, description="Place types to filter by"),
     limit: int = Query(10, ge=1, le=50, description="Number of results to return")
 ) -> SearchResponse:
     """
@@ -30,10 +31,12 @@ async def semantic_search_city(
     * 🧠 Natural language query understanding
     * 🎯 Semantic similarity-based ranking
     * 📊 Detailed information for each result
+    * 🏷️ Filter by place types (museum, restaurant, etc.)
     
     Args:
         city: City to search in
         query: Natural language search query
+        types: List of place types to filter by (optional)
         limit: Maximum number of results (1-50)
         
     Returns:
@@ -60,7 +63,7 @@ async def semantic_search_city(
                 detail=error_msg
             )
         
-        result = search_ball_tree_task.delay(city, query, limit)
+        result = search_ball_tree_task.delay(city, query, limit, types)
         search_results = result.get()
         
         if search_results.get("status") != "success":
@@ -86,6 +89,7 @@ async def semantic_search_city(
 async def semantic_search_all_cities(
     query: str,
     cities: Optional[List[str]] = Query(None, description="Cities to search in. If not provided, searches in all cities"),
+    types: Optional[List[str]] = Query(None, description="Place types to filter by"),
     limit: int = Query(10, ge=1, le=50, description="Number of results to return")
 ) -> SearchResponse:
     """
@@ -99,10 +103,12 @@ async def semantic_search_all_cities(
       - 70% weight for semantic similarity
       - 30% weight for place type matching
     * 📊 Detailed information for each result
+    * 🏷️ Filter by place types (museum, restaurant, etc.)
     
     Args:
         query: Natural language search query
         cities: List of cities to search in (if not provided, searches in all cities)
+        types: List of place types to filter by (optional)
         limit: Maximum number of results (1-50)
         
     Returns:
@@ -134,7 +140,7 @@ async def semantic_search_all_cities(
                 detail=error_msg
             )
         
-        result = search_all_cities_ball_tree_task.delay(query, cities, limit)
+        result = search_all_cities_ball_tree_task.delay(query, cities, limit, types)
         search_results = result.get()
         
         if search_results.get("status") not in ["success", "partial_success"]:

@@ -59,11 +59,26 @@ class LocationListResponse(BaseModel):
     filters: Optional[Dict[str, Any]] = Field(None, description="Applied filters")
     total: int = Field(..., description="Total number of locations matching filters")
 
+class WikipediaInfo(BaseModel):
+    """Model representing information from Wikipedia."""
+    url: str = Field(..., description="URL of the Wikipedia page")
+    title: str = Field(..., description="Title of the Wikipedia article")
+    summary: str = Field(..., description="Summary of the Wikipedia article")
+
+class CityInfo(BaseModel):
+    """Model representing detailed information about a city."""
+    city: str = Field(..., description="Name of the city")
+    wikipedia: Optional[WikipediaInfo] = Field(None, description="Information from Wikipedia about the city")
+
 class SystemStatus(BaseModel):
     """Model representing the system status."""
     status: str = Field(..., description="Current system status")
     cities: List[str] = Field(..., description="List of available cities")
     place_types: List[str] = Field(..., description="List of available place types")
+
+class CitiesResponse(BaseModel):
+    """Model representing detailed information about cities."""
+    cities: List[CityInfo] = Field(..., description="List of cities with detailed information")
 
 class ErrorResponse(BaseModel):
     """Model representing an error response."""

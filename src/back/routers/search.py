@@ -20,6 +20,7 @@ router = APIRouter(
 async def search_city(
     city: str,
     query: str,
+    types: Optional[List[str]] = Query(None, description="Place types to filter by"),
     limit: int = Query(10, ge=1, le=50, description="Number of results to return")
 ) -> SearchResponse:
     """
@@ -30,10 +31,12 @@ async def search_city(
     * 🎯 TF-IDF based ranking
     * 🔄 Wildcard search support (e.g., "rest*" for restaurants)
     * 📊 Automatic query correction
+    * 🏷️ Filter by place types (museum, restaurant, etc.)
     
     Args:
         city: City to search in
         query: Search query (supports wildcard characters)
+        types: List of place types to filter by (optional)
         limit: Maximum number of results (1-50)
         
     Returns:
@@ -49,7 +52,7 @@ async def search_city(
             detail=f"City {city} not found. Available cities: {', '.join(settings.CITIES)}"
         )
     
-    result = search_index_task.delay(city, query, limit)
+    result = search_index_task.delay(city, query, limit, types)
     search_results = result.get()
     
     if search_results.get("status") != "success":
@@ -64,6 +67,7 @@ async def search_city(
 async def search_all_cities(
     query: str,
     cities: Optional[List[str]] = Query(None, description="Cities to search in. If not provided, searches in all cities"),
+    types: Optional[List[str]] = Query(None, description="Place types to filter by"),
     limit: int = Query(10, ge=1, le=50, description="Number of results to return")
 ) -> SearchResponse:
     """
@@ -75,10 +79,12 @@ async def search_all_cities(
     * 🎯 TF-IDF based ranking
     * 🔄 Wildcard search support
     * 📊 Automatic query correction
+    * 🏷️ Filter by place types (museum, restaurant, etc.)
     
     Args:
         query: Search query (supports wildcard characters)
         cities: List of cities to search in (if not provided, searches in all cities)
+        types: List of place types to filter by (optional)
         limit: Maximum number of results (1-50)
         
     Returns:
@@ -99,7 +105,7 @@ async def search_all_cities(
             detail=f"Invalid cities: {', '.join(invalid_cities)}. Available cities: {', '.join(settings.CITIES)}"
         )
     
-    result = search_all_cities_task.delay(query, cities, limit)
+    result = search_all_cities_task.delay(query, cities, limit, types)
     search_results = result.get()
     
     if search_results.get("status") != "success":

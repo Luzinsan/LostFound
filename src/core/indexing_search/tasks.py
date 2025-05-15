@@ -2,7 +2,7 @@ import logging
 from celery import group
 import sys, os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 
@@ -150,7 +150,7 @@ def build_all_indices_task() -> dict:
         return {"status": "error", "message": str(e)}
 
 @app.task
-def search_index_task(city: str, query: str, limit: int = 10) -> dict:
+def search_index_task(city: str, query: str, limit: int = 10, types: Optional[List[str]] = None) -> dict:
     """
     Searches the inverted index for the given query within a specific city.
     Supports wildcard queries using the "*" character (e.g. "rest*" for restaurants).
@@ -160,6 +160,7 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
         city: The city to search in
         query: The search query (can include wildcards)
         limit: Maximum number of results to return
+        types: Optional list of place types to filter by
         
     Returns:
         Dictionary with search results and status
@@ -181,10 +182,20 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
         results, query_tokens = index_manager.search(city, query)
         
         # Get additional document details from MongoDB
+        filtered_results = []
         for result in results:
             doc_id = result["doc_id"]
-            doc_data = mongo_manager.load({"_id": doc_id}, "places")
-            if doc_data:
+            
+            # Базовый фильтр для загрузки документа
+            mongo_filter = {"_id": doc_id}
+            
+            # Если указаны типы, добавляем их в фильтр
+            if types and len(types) > 0:
+                mongo_filter["types"] = {"$in": types}
+                
+            doc_data = mongo_manager.load(mongo_filter, "places")
+            
+            if doc_data and len(doc_data) > 0:
                 doc_data = doc_data[0]
                 result.update({
                     "name": doc_data.get("displayName", {}),
@@ -192,12 +203,13 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
                     "types": doc_data.get("types", []),
                     "summary": doc_data.get("editorialSummary", 'Unknown')
                 })
+                filtered_results.append(result)
         
         # Sort by TF-IDF score
-        results.sort(key=lambda x: x['score'], reverse=True)
+        filtered_results.sort(key=lambda x: x['score'], reverse=True)
         
         # Limit results
-        limited_results = results[:limit]
+        limited_results = filtered_results[:limit]
         
         # Check if query was corrected
         corrected_query = None
@@ -208,7 +220,7 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
             "status": "success",
             "message": f"Found {len(limited_results)} results for '{query}' in {city}",
             "results": limited_results,
-            "total_found": len(results),
+            "total_found": len(filtered_results),
             "query_tokens": query_tokens if query_tokens else [],
             "wildcard_used": '*' in query,
             "corrected_query": corrected_query if corrected_query else None
@@ -223,7 +235,7 @@ def search_index_task(city: str, query: str, limit: int = 10) -> dict:
         }
 
 @app.task
-def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10) -> dict:
+def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10, types: Optional[List[str]] = None) -> dict:
     """
     Searches for the query across all specified cities (or all cities if none specified).
     
@@ -231,6 +243,7 @@ def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10
         query: The search query (can include wildcards)
         cities: List of cities to search in (if None, all cities in settings.CITIES are used)
         limit: Maximum number of results to return per city
+        types: Optional list of place types to filter by
         
     Returns:
         Dictionary with combined search results from all cities
@@ -245,7 +258,7 @@ def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10
         # Search in each city
         tasks = []
         for city in cities:
-            tasks.append(search_index_task.s(city, query, limit))
+            tasks.append(search_index_task.s(city, query, limit, types))
             
         # Execute all search tasks in parallel
         task_group = group(tasks)
