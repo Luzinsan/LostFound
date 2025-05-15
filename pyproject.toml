@@ -19,5 +19,6 @@ dependencies = [
     "wikipedia-api>=0.8.1",
     "python-telegram-bot==22.0",
     "numpy>=2.2.4",
+    "gevent==24.11.1"
 ]
 
