@@ -1,8 +1,14 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
-from config import settings
-from indexing.tasks import search_index_task, search_all_cities_task
-from models import SearchResponse
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.configs.config import settings
+from src.core.indexing_search.tasks import search_index_task, search_all_cities_task
+from src.back.models.models import SearchResponse
+
 
 router = APIRouter(
     prefix="/index_search",

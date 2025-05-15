@@ -1,12 +1,16 @@
 import requests
 import json
-from config import settings
 import logging
 import time
 from typing import List, Dict, Any, Optional
-from parsers import tasks
-from utils.mongodb_handler import mongo_manager
-from parsers.base_parser import BaseParser
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+from src.core.parsers import tasks
+from src.configs.config import settings
+from src.utils.mongodb_handler import mongo_manager
+from src.core.parsers.base_parser import BaseParser
 
 
 class GooglePlacesParser(BaseParser):

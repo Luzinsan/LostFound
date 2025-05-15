@@ -5,12 +5,15 @@ from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
 import logging
-from config import settings
-from routers import search, system, locations, semantic_search
-from models import ErrorResponse
-import os
+import sys, os
+from pathlib import Path
 
-# Set up logging
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.configs.config import settings
+from src.back.routers import search, system, locations, semantic_search
+from src.back.models.models import ErrorResponse
+
 logging.basicConfig(
     level=logging.INFO if settings.DEBUG_MODE else logging.ERROR,
     format='%(asctime)s [%(levelname)s] %(message)s'

@@ -1,7 +1,13 @@
 import numpy as np
 import heapq
-from utils.mongodb_handler import mongo_manager
 import logging
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.utils.mongodb_handler import mongo_manager
+
 
 class BallTreeNode:
     def __init__(self, indices, pivot, radius, left=None, right=None):

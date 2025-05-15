@@ -1,7 +1,12 @@
 from fastapi import APIRouter, HTTPException
-from config import settings
-from indexing.tasks import build_all_indices_task
-from models import SystemStatus
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.configs.config import settings
+from src.core.indexing_search.tasks import build_all_indices_task
+from src.back.models.models import SystemStatus
 
 router = APIRouter(
     prefix="/system",

@@ -6,6 +6,3 @@
 
 # running celery workers
 uv run celery -A celery_app worker --loglevel=error
-
-# Then
-uv run main.py

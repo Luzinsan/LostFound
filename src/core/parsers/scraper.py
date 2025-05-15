@@ -3,9 +3,13 @@ from bs4 import BeautifulSoup
 import logging
 from typing import Optional, Dict, List
 from urllib.parse import urljoin, urlparse
-from config import settings
 import re
-from parsers.base_parser import BaseParser
+import sys, os
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.core.parsers.base_parser import BaseParser
+from src.configs.config import settings
 
 class WebScraper(BaseParser):
 

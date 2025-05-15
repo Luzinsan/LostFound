@@ -1,12 +1,19 @@
 import logging
 from celery import group
-from config import settings
-from utils.mongodb_handler import mongo_manager
-from tree_based_retrieval.ball_tree import SimilaritySearchEngine
 from typing import List, Dict, Any
-from celery_app import app
-from embeddings.BERT_ru import RussianBERTEmbedder
 import numpy as np
+
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.configs.config import settings
+from src.utils.mongodb_handler import mongo_manager
+from src.core.celery_app import app
+from src.core.semantic_search.BERT_ru import RussianBERTEmbedder
+from src.core.semantic_search.ball_tree import SimilaritySearchEngine
+
 
 @app.task
 def build_city_ball_tree_task(city: str) -> dict:

@@ -1,17 +1,22 @@
-import json
 import logging
 import re
 import math
-import os
 import nltk
+from nltk.stem.snowball import SnowballStemmer
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union, Tuple
-from parsers import google_places
-from indexing.wildcard_handler import WildcardHandler
-from indexing.spell_checker import SpellChecker
-from nltk.stem.snowball import SnowballStemmer
-from utils.mongodb_handler import MongoDBManager
-from config import settings
+
+
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.core.parsers import google_places
+from src.core.indexing_search.wildcard_handler import WildcardHandler
+from src.core.indexing_search.spell_checker import SpellChecker
+from src.utils.mongodb_handler import MongoDBManager
+from src.configs.config import settings
 
 class IndexManager:
     """

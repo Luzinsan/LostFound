@@ -1,11 +1,17 @@
-from config import settings
 import logging
 from typing import Optional, Dict
 import wikipediaapi
-from parsers.base_parser import BaseParser
-from config import settings
 import time
-from utils.mongodb_handler import mongo_manager
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.core.parsers.base_parser import BaseParser
+from src.configs.config import settings
+from src.utils.mongodb_handler import mongo_manager
+from src.configs.config import settings
+
 
 class WikipediaParser(BaseParser):
     # https://wikipedia-api.readthedocs.io/en/latest/

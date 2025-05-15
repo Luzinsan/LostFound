@@ -1,10 +1,16 @@
 import logging
 from celery import group
-from config import settings
-from utils.mongodb_handler import mongo_manager
-from indexing.index_manager import IndexManager
+import sys, os
+from pathlib import Path
 from typing import List
-from celery_app import app
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.configs.config import settings
+from src.utils.mongodb_handler import mongo_manager
+from src.core.indexing_search.index_manager import IndexManager
+from src.core.celery_app import app
+
 
 @app.task
 def build_location_index_task(location_id: str) -> dict:

@@ -1,15 +1,21 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 from typing import List, Optional
-from config import settings
-from models import (
+import sys, os
+from pathlib import Path
+import logging
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.configs.config import settings
+from src.back.models.models import (
     LocationListResponse,
     PaginationParams,
     LocationFilters,
     BasePlace,
     DetailedPlace
 )
-from utils.mongodb_handler import mongo_manager
-import logging
+from src.utils.mongodb_handler import mongo_manager
+
 
 router = APIRouter(
     prefix="/locations",

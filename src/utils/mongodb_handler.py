@@ -2,8 +2,13 @@ import logging
 from typing import Any, Dict, List, Union
 from pymongo import MongoClient, errors, UpdateOne
 from pymongo.collection import Collection
-from config import settings
 import numpy as np
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[2]))
+from src.configs.config import settings
+
 
 class MongoDBManager:
     """

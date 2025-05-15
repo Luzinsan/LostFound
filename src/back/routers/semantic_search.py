@@ -1,9 +1,15 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
-from config import settings
-from tree_based_retrieval.tasks import search_ball_tree_task, search_all_cities_ball_tree_task
-from models import SearchResponse
 import logging
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.configs.config import settings
+from src.core.semantic_search.tasks import search_ball_tree_task, search_all_cities_ball_tree_task
+from src.back.models.models import SearchResponse
+
 
 router = APIRouter(
     prefix="/semantic",

@@ -1,7 +1,13 @@
 import logging
 from typing import List, Set, Optional
 from nltk.metrics.distance import edit_distance
-from config import settings
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from src.configs.config import settings
+
 
 class SpellChecker:
     """

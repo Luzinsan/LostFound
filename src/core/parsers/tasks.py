@@ -1,13 +1,17 @@
 import logging
 from celery import Celery, group, shared_task
-from parsers.scraper import WebScraper
-from parsers import wikipedia_parser, google_places
-from config import settings
-import time
-from utils.mongodb_handler import mongo_manager
-from celery_app import app
-from embeddings.BERT_ru import RussianBERTEmbedder
 from typing import Dict, List
+import time
+import sys, os
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+from src.core.parsers.scraper import WebScraper
+from src.core.parsers import wikipedia_parser, google_places
+from src.core.celery_app import app
+from src.core.semantic_search.BERT_ru import RussianBERTEmbedder
+from src.configs.config import settings
+from src.utils.mongodb_handler import mongo_manager
 
 
 @app.task
@@ -64,6 +68,7 @@ def parse_web_scrape_task(url: str) -> dict:
     logging.info(f"[Task] Starting website information parsing for url: {url}")
     return WebScraper().parse(url)
 
+
 @app.task
 def update_place_description_task(description, data: dict) -> dict:
     """
@@ -78,6 +83,7 @@ def update_place_description_task(description, data: dict) -> dict:
     # Create embeddings for the location
     data_with_embeddings = create_location_embeddings.delay(data)
     return data_with_embeddings
+
 
 @shared_task
 def create_location_embeddings(location_data: dict) -> Dict:
