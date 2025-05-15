@@ -1,5 +1,3 @@
-import os
-import sys
 import logging
 import aiohttp
 from telegram.constants import ParseMode
@@ -19,9 +17,14 @@ from telegram.ext import (
     filters,
 )
 
-sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+import sys, os
+from pathlib import Path
 
-from config import settings
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+from src.configs.config import settings
+from front.telegram_bot.index_search import search_command, search_all_command
+from front.telegram_bot.semantic_search import semantic_search_command, semantic_search_all_command
+
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -32,12 +35,7 @@ logger = logging.getLogger(__name__)
 ST_CITY = 1
 ST_TYPE = 2
 ST_QUERY = 3
-
-# CONFIGS
-AVAILABLE_CITIES = settings.CITIES
-AVAILABLE_TYPES = settings.PLACE_TYPES
-API_BASE = settings.API_BASE 
-TELEGRAM_BOT_TOKEN = settings.TELEGRAM_BOT_API  
+ 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
@@ -64,195 +62,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "Пример: /search Москва museum  или  /semantic Москва интересный музей"
     )
 
-# Индексный поиск
-async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Пример команды: /search Москва museum
-    Делает GET-запрос:
-    GET {API_BASE}/api/v1/index_search/city/{city}?query=<запрос>&limit=10
-    """
-    try:
-        args = context.args
-        if len(args) < 2:
-            await update.message.reply_text("Формат: /search <город> <запрос>")
-            return
-
-        city = args[0]
-        query = " ".join(args[1:])
-
-        url = f"{API_BASE}/api/v1/index_search/city/{city}"
-        params = {"query": query, "limit": 10}
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as resp:
-                response = await resp.json()
-
-        if response and response.get("status") == "success":
-            results = response.get("results", [])
-            total_found = response.get("total_found", 0)
-            message_text = f"Найдено результатов: {total_found}\n"
-
-            for idx, place in enumerate(results[:10], start=1):
-                name = place.get("name", "???")
-                address = place.get("address", "")
-                score = place.get("score", 0)
-                summary = place.get("summary", "")
-                message_text += (
-                    f"\n<b>{idx}. {name}</b>\n"
-                    f"Адрес: {address}\n"
-                    f"Скор: {score:.2f}\n"
-                    f"{summary}\n"
-                )
-            await update.message.reply_text(message_text, parse_mode=ParseMode.HTML)
-        else:
-            msg = response.get("message", "Неизвестная ошибка") if response else "Нет ответа"
-            await update.message.reply_text(f"Ошибка: {msg}")
-
-    except Exception as e:
-        logger.exception("search_command error:")
-        await update.message.reply_text("Произошла ошибка при поиске (см. логи).")
-
-async def search_all_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Пример команды: /searchall park
-    Делает GET-запрос:
-    GET {API_BASE}/api/v1/index_search/all?query=<запрос>&limit=10
-    """
-    try:
-        args = context.args
-        if not args:
-            await update.message.reply_text("Формат: /searchall <запрос>")
-            return
-
-        query = " ".join(args)
-        url = f"{API_BASE}/api/v1/index_search/all"
-        params = {"query": query, "limit": 10}
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as resp:
-                response = await resp.json()
-
-        if response and response.get("status") == "success":
-            results = response.get("results", [])
-            total_found = response.get("total_found", 0)
-            message_text = f"Найдено результатов (по всем городам): {total_found}\n"
-            for idx, place in enumerate(results[:10], start=1):
-                city = place.get("city", "???")
-                name = place.get("name", "???")
-                address = place.get("address", "")
-                score = place.get("score", 0)
-                summary = place.get("summary", "")
-                message_text += (
-                    f"\n<b>{idx}. {name}</b> ({city})\n"
-                    f"Адрес: {address}\n"
-                    f"Скор: {score:.2f}\n"
-                    f"{summary}\n"
-                )
-            await update.message.reply_text(message_text, parse_mode=ParseMode.HTML)
-        else:
-            msg = response.get("message", "Неизвестная ошибка") if response else "Нет ответа"
-            await update.message.reply_text(f"Ошибка: {msg}")
-
-    except Exception as e:
-        logger.exception("search_all_command error:")
-        await update.message.reply_text("Произошла ошибка при поиске (см. логи).")
-
-
-# Семантический поиск
-async def semantic_search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Пример команды: /semantic Москва интересный музей
-    Делает GET-запрос:
-    GET {API_BASE}/api/v1/semantic/city/{city}?query=<запрос>&limit=10
-    """
-    try:
-        args = context.args
-        if len(args) < 2:
-            await update.message.reply_text("Формат: /semantic <город> <запрос>")
-            return
-
-        city = args[0]
-        query = " ".join(args[1:])
-        url = f"{API_BASE}/api/v1/semantic/city/{city}"
-        params = {"query": query, "limit": 10}
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as resp:
-                response = await resp.json()
-
-        if response and response.get("status") == "success":
-            results = response.get("results", [])
-            total_found = response.get("total_found", 0)
-            message_text = f"Найдено результатов (семантический поиск): {total_found}\n"
-            for idx, place in enumerate(results[:10], start=1):
-                name = place.get("name", "???")
-                address = place.get("address", "")
-                score = place.get("score", 0)
-                summary = place.get("summary", "")
-                message_text += (
-                    f"\n<b>{idx}. {name}</b>\n"
-                    f"Адрес: {address}\n"
-                    f"Скор: {score:.2f}\n"
-                    f"{summary}\n"
-                )
-            await update.message.reply_text(message_text, parse_mode=ParseMode.HTML)
-        else:
-            msg = response.get("message", "Неизвестная ошибка") if response else "Нет ответа"
-            await update.message.reply_text(f"Ошибка: {msg}")
-    except Exception as e:
-        logger.exception("semantic_search_command error:")
-        await update.message.reply_text("Произошла ошибка при семантическом поиске (см. логи).")
-
-async def semantic_search_all_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """
-    Пример команды: /semanticall достопримечательности
-    Делает GET-запрос:
-    GET {API_BASE}/api/v1/semantic/all?query=<запрос>&limit=10
-    """
-    try:
-        args = context.args
-        if not args:
-            await update.message.reply_text("Формат: /semanticall <запрос>")
-            return
-
-        query = " ".join(args)
-        url = f"{API_BASE}/api/v1/semantic/all"
-        params = {"query": query, "limit": 10}
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, params=params) as resp:
-                response = await resp.json()
-
-        if response and response.get("status") == "success":
-            results = response.get("results", [])
-            total_found = response.get("total_found", 0)
-            message_text = f"Найдено результатов (семантический поиск по всем городам): {total_found}\n"
-            for idx, place in enumerate(results[:10], start=1):
-                city = place.get("city", "???")
-                name = place.get("name", "???")
-                address = place.get("address", "")
-                score = place.get("score", 0)
-                summary = place.get("summary", "")
-                message_text += (
-                    f"\n<b>{idx}. {name}</b> ({city})\n"
-                    f"Адрес: {address}\n"
-                    f"Скор: {score:.2f}\n"
-                    f"{summary}\n"
-                )
-            await update.message.reply_text(message_text, parse_mode=ParseMode.HTML)
-        else:
-            msg = response.get("message", "Неизвестная ошибка") if response else "Нет ответа"
-            await update.message.reply_text(f"Ошибка: {msg}")
-    except Exception as e:
-        logger.exception("semantic_search_all_command error:")
-        await update.message.reply_text("Произошла ошибка при семантическом поиске (см. логи).")
 
 async def startsearch_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Начинаем пошаговый поиск.\nВыберите город:")
-    buttons = [[InlineKeyboardButton(city, callback_data=city)] for city in AVAILABLE_CITIES]
+    buttons = [[InlineKeyboardButton(city, callback_data=city)] for city in settings.CITIES]
     markup = InlineKeyboardMarkup(buttons)
     await update.message.reply_text("Выберите город:", reply_markup=markup)
     return ST_CITY
+
 
 async def city_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
@@ -266,18 +83,20 @@ async def city_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int
     )
     return ST_QUERY
 
+
 async def query_received(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_text = update.message.text
     context.user_data["search_query"] = user_text
     await run_inline_search(update, context)
     return ConversationHandler.END
 
+
 async def run_inline_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     city = context.user_data.get("chosen_city")
     full_query = context.user_data.get("search_query", "").strip()
 
     # Пошаговый поиск использует индексный эндпоинт:
-    url = f"{API_BASE}/api/v1/index_search/city/{city}"
+    url = f"{settings.API_BASE}/api/v1/index_search/city/{city}"
     params = {"query": full_query, "limit": 10}
 
     try:
@@ -309,6 +128,7 @@ async def run_inline_search(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.exception("run_inline_search error:")
         await update.message.reply_text("Произошла ошибка при поиске.")
 
+
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("Поиск отменен.")
     return ConversationHandler.END
@@ -322,10 +142,11 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Попробуй /help для списка команд."
     )
 
+
 def main():
     application = (
         Application.builder()
-        .token(TELEGRAM_BOT_TOKEN)
+        .token(settings.TELEGRAM_BOT_API)
         .build()
     )
 

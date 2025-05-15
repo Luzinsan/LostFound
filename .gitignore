@@ -174,3 +174,5 @@ aggregated/
 
 checkpoints/
 
+
+node_modules/
