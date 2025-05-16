@@ -90,9 +90,7 @@ async def search(
         * Wildcard search usage information
     """
     try:
-        # Default to all cities if none are specified
-        if not cities:
-            cities = settings.CITIES
+        cities = cities if cities else settings.CITIES
         
         if len(cities) == 1:
             result = search_index_task.delay(cities[0], query, limit, types)

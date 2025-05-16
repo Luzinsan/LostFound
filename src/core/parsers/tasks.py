@@ -47,7 +47,6 @@ def parse_google_places_task(city: str, place_types: Optional[List[str]] = None)
         city: City name to parse
         place_types: Optional list of place types to parse. If None, uses all types from settings.PLACE_TYPES
     """
-    # Use all place types from settings if not specified
     types_to_parse = place_types if place_types else settings.PLACE_TYPES
     
     logging.info(f"[Task] Starting Google Places parsing for city: {city} for types: {types_to_parse}")

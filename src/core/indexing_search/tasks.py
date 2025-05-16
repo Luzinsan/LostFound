@@ -133,7 +133,7 @@ def build_all_indices_task(cities: Optional[List[str]] = None) -> dict:
         Dictionary with status and results from each city's index building task
     """
     try:
-        cities_to_process = cities or settings.CITIES
+        cities_to_process = cities if cities else settings.CITIES
         
         logging.info(f"[Task] Starting index building for cities: {cities_to_process}")
         
@@ -245,8 +245,7 @@ def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10
         Dictionary with combined search results from all cities
     """
     try:
-        if cities is None:
-            cities = settings.CITIES
+        cities = cities if cities else settings.CITIES
             
         logging.info(f"[Task] Searching for '{query}' across cities: {cities}")
         

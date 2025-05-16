@@ -11,6 +11,7 @@ class BasePlace(BaseModel):
     types: List[str] = Field(..., description="List of place types")
     address: Optional[str] = Field(None, description="Address of the place")
     summary: Optional[str] = Field(None, description="Description or summary of the place")
+    photos: Optional[List[str]] = Field(None, description="List of photo URLs for the place")
 
 class Review(BaseModel):
     """Model representing a review for a place."""
@@ -31,6 +32,7 @@ class DetailedPlace(BasePlace):
     user_ratings_total: Optional[int] = Field(None, description="Total number of user ratings")
     price_level: Optional[str] = Field(None, description="Price level (0-4)")
     reviews: Optional[List[Review]] = Field(None, description="List of reviews")
+    googleMapsUri: Optional[str] = Field(None, description="Google Maps URL of the place")
 
 class SearchResponse(BaseModel):
     """Model representing the response from a search operation."""

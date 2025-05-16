@@ -57,6 +57,7 @@ class GooglePlacesParser(BaseParser):
             "regionCode": region_code,
             "pageSize": results_per_page,
         }
+        self.api_key = api_key
 
     def _make_request(self, 
                       url: str, 
@@ -176,6 +177,63 @@ class GooglePlacesParser(BaseParser):
             logging.error(f"Error in process_reviews_for_embeddings: {e}")
             return ''
 
+    def fetch_place_photos(self, place: Dict[str, Any], limit: int = 10) -> Dict[str, str]:
+        """
+        Fetches photos for a place from Google Places API.
+        
+        Args:
+            place: Place data containing photo references.
+            limit: Maximum number of photos to fetch, defaults to 10.
+            
+        Returns:
+            Dictionary mapping photo index to photo URI.
+        """
+        try:
+            if 'photos' not in place or not place['photos']:
+                logging.info(f"No photos found for place: {place.get('_id', 'unknown')}")
+                return {}
+            
+            photo_urls = []
+            photo_count = min(limit, len(place['photos']))
+            
+            for i in range(photo_count):
+                try:
+                    photo_ref = place['photos'][i].get('name')
+                    if not photo_ref:
+                        continue
+                    time.sleep(1.5)
+                    
+                    # Get photo URI with skipHttpRedirect
+                    photo_url = f"https://places.googleapis.com/v1/{photo_ref}/media"
+                    photo_params = {
+                        'skipHttpRedirect': 'true',
+                        'maxHeightPx': 1000,
+                        'maxWidthPx': 1000,
+                        'key': self.api_key
+                    }
+                    
+                    photo_response = requests.get(
+                        url=photo_url,
+                        params=photo_params,
+                        timeout=self.timeout
+                    )
+                    
+                    if photo_response.status_code == 200:
+                        photo_data = photo_response.json()
+                        if 'photoUri' in photo_data:
+                            photo_urls.append(photo_data['photoUri'])
+                    else:
+                        logging.error(f"Failed to fetch photo {i} for place {place.get('_id')}: {photo_response.status_code}")
+                
+                except Exception as e:
+                    logging.error(f"Error fetching photo {i} for place {place.get('_id')}: {e}")
+                    continue
+                    
+            return photo_urls
+            
+        except Exception as e:
+            logging.error(f"Error in fetch_place_photos: {e}")
+            return {}
 
     # https://developers.google.com/maps/documentation/places/web-service/text-search
     def parse(self, 
@@ -229,9 +287,12 @@ class GooglePlacesParser(BaseParser):
                                                             .get('units', '') \
                                             if 'endPrice' in place[field].keys() else '')
                         else:
-                            place[field] = place[field].get('text',None) 
+                            place[field] = place[field].get('text', None) 
                 if place.get('reviews', None):
                     place['reviews_flattened'] = self.process_reviews_for_embeddings(place['reviews'])
+                
+                if place.get('photos', None):
+                    place['photos'] = self.fetch_place_photos(place)
 
             mongo_manager.save(places_data_per_page, "places")
             for place in places_data_per_page:

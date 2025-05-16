@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Query
 import sys, os
 from pathlib import Path
 from typing import List, Dict, Any, Optional
@@ -31,46 +31,40 @@ async def system_status() -> SystemStatus:
 
 
 @router.get("/cities", response_model=CitiesResponse)
-async def get_cities(city: Optional[str] = None) -> CitiesResponse:
+async def get_cities(
+        cities: Optional[List[str]] = Query(None, description="Available cities in system. If not provided, returns all cities.")
+    ) -> CitiesResponse:
     """
     Get the list of available cities with detailed information from Wikipedia.
     
     Args:
-        city: Optional city name to filter results for a specific city
+        cities: Optional list of city names to filter results for specific cities
     
     Returns:
-        CitiesResponse containing detailed information about all cities or a specific city
+        CitiesResponse containing detailed information about cities
     """
-    # Получаем информацию о городах из MongoDB
     cities_with_info: List[CityInfo] = []
     
-    # Filter cities if a specific city is requested
-    cities_to_process = [city] if city and city in settings.CITIES else settings.CITIES
+    cities_to_process = cities if cities else settings.CITIES
     
     for city_name in cities_to_process:
-        # Ищем информацию о городе в базе данных
         city_data_list = mongo_manager.load({"city": city_name}, "cities")
         
         if city_data_list and len(city_data_list) > 0 and "wikipedia" in city_data_list[0]:
-            # Если информация о городе найдена, добавляем ее в формате CityInfo
-            city_data = city_data_list[0]  # Берем первый элемент из списка результатов
+            city_data = city_data_list[0]
             
-            # Создаем объект WikipediaInfo с информацией из Wikipedia
             wiki_info = WikipediaInfo(
                 url=city_data["wikipedia"]["url"],
                 title=city_data["wikipedia"]["title"],
                 summary=city_data["wikipedia"]["summary"]
             )
             
-            # Создаем объект CityInfo с информацией о городе
             city_info = CityInfo(city=city_name, wikipedia=wiki_info)
         else:
-            # Если информации нет, добавляем только название города
             city_info = CityInfo(city=city_name, wikipedia=None)
             
         cities_with_info.append(city_info)
     
-    # Создаем и возвращаем объект CitiesResponse
     response = CitiesResponse(cities=cities_with_info)
     return response
 

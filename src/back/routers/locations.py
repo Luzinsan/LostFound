@@ -56,21 +56,12 @@ async def list_locations(
         Paginated list of locations matching the criteria
     """
     try:
-        # Validate city if provided
-        if filters.city and filters.city not in settings.CITIES:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid city: {filters.city}. Available cities: {', '.join(settings.CITIES)}"
-            )
-        
-        # Build MongoDB query
         query = {}
         if filters.city:
             query["city"] = filters.city
         if filters.types:
             query["types"] = {"$in": filters.types}
         
-        # Get paginated results
         skip = (pagination.page - 1) * pagination.per_page
         paginated_data = mongo_manager.load_paginated(
             query=query,
@@ -79,7 +70,6 @@ async def list_locations(
             limit=pagination.per_page
         )
         
-        # Convert to BasePlace models
         results = []
         for loc in paginated_data["results"]:
             result = BasePlace(
@@ -88,7 +78,8 @@ async def list_locations(
                 city=loc.get("city", ""),
                 types=loc.get("types", []),
                 address=loc.get("shortFormattedAddress"),
-                summary=loc.get("editorialSummary")
+                summary=loc.get("editorialSummary"),
+                photos=loc.get("photos", None)
             )
             results.append(result)
         
@@ -142,7 +133,6 @@ async def get_location_details(
         ) for review in location.get("reviews", [])]
             
             
-        # Create result
         result = DetailedPlace(
             doc_id=location["_id"],
             name=location.get("displayName", ""),
@@ -153,7 +143,9 @@ async def get_location_details(
             rating=location.get("rating"),
             user_ratings_total=location.get("userRatingCount"),
             price_level=location.get("priceLevel"),
-            reviews=reviews
+            reviews=reviews,
+            googleMapsUri=location.get("googleMapsUri", None),
+            photos=location.get("photos", None)
         )
         
         return result

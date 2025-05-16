@@ -1,6 +1,12 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends, Form, Query
+from fastapi import (
+    APIRouter, 
+    HTTPException,  
+    Form, 
+    Query
+)
 from typing import Dict, List, Optional
 from celery.result import AsyncResult
+from celery import group
 import sys, os
 from pathlib import Path
 
@@ -30,22 +36,30 @@ router = APIRouter(
 
 @router.post("/parse-city")
 async def parse_city(
-    city: str = Form(..., description="City name to parse"),
+    cities: Optional[List[str]] = Query(None, description="Cities to parse. If not provided, all cities in settings will be parsed."),
     place_types: Optional[List[str]] = Query(None, description="Optional list of place types to parse")
 ):
     """
-    Endpoint to parse both Wikipedia and Google Places data for a specific city
+    Endpoint to parse both Wikipedia and Google Places data for specific cities
     
     Args:
-        city: City name to parse
+        cities: Optional list of cities to parse. If not provided, all cities in settings will be parsed.
         place_types: Optional list of place types to parse. If not provided, all types will be parsed.
     """
     try:
-        # Start the Celery task asynchronously
-        task = parse_city_task.delay(city, place_types)
-        return {"task_id": task.id, "status": "Task started", "message": f"Started parsing data for {city}"}
+        cities_to_process = cities if cities else settings.CITIES
+        
+        task_group = group(parse_city_task.s(city, place_types) for city in cities_to_process)
+        group_result = task_group.apply_async()
+        
+        return {
+            "status": "Tasks started", 
+            "message": f"Started parallel parsing for {len(cities_to_process)} cities", 
+            "group_id": group_result.id,
+            "cities": cities_to_process
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start parsing task: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error starting parallel parsing tasks: {str(e)}")
 
 
 @router.post("/parse-wikipedia")

@@ -81,7 +81,7 @@ def build_all_cities_ball_trees_task(cities: Optional[List[str]] = None) -> dict
         Dictionary with status and results from each city's ball tree building task
     """
     try:
-        cities_to_process = cities or settings.CITIES
+        cities_to_process = cities if cities else settings.CITIES
         
         logging.info(f"[Task] Starting ball tree building for cities: {cities_to_process}")
         
@@ -213,9 +213,7 @@ def search_all_cities_ball_tree_task(query: str, cities: List[str] = None, limit
         types: Optional list of place types to filter by
     """
     try:
-        # Use all cities from settings if none specified
-        if cities is None:
-            cities = settings.CITIES
+        cities = cities if cities else settings.CITIES
             
         logging.info(f"[Task] Searching for '{query}' across cities: {cities}")
         
@@ -267,7 +265,7 @@ def create_embeddings_for_cities(cities: Optional[List[str]] = None) -> Dict:
     Returns:
         Dictionary with statistics about the embedding creation process
     """
-    cities_to_process = cities or settings.CITIES
+    cities_to_process = cities if cities else settings.CITIES
     
     logging.info(f"Starting batch embedding creation for cities: {cities_to_process}")
     
@@ -365,7 +363,7 @@ def build_embeddings_and_ball_trees_task(cities: Optional[List[str]] = None) -> 
         Dictionary with status and started task information
     """
     try:
-        cities_to_process = cities or settings.CITIES
+        cities_to_process = cities if cities else settings.CITIES
         
         logging.info(f"[Task] Starting combined embeddings creation and ball tree building for cities: {cities_to_process}")
         chain_result = chain(

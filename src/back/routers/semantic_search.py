@@ -65,9 +65,7 @@ async def semantic_search(
                 detail=error_msg
             )
         
-        # Default to all cities if none are specified
-        if not cities:
-            cities = settings.CITIES
+        cities = cities if cities else settings.CITIES
         
         if len(cities) == 1:
             result = search_ball_tree_task.delay(cities[0], query, limit, types)
