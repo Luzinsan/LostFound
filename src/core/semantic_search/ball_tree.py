@@ -142,7 +142,7 @@ class BallTree:
             raise
 
 class SimilaritySearchEngine:
-    def __init__(self, id_embedding_dict: dict, city: str = None):
+    def __init__(self, id_embedding_dict: dict, city: str):
         try:
             self.item_ids = list(id_embedding_dict.keys())
             embeddings = np.array(list(id_embedding_dict.values()))
@@ -154,9 +154,7 @@ class SimilaritySearchEngine:
             # Build Ball Tree
             self.tree = BallTree(self.normalized_embeddings)
             
-            # If specified city, save tree to MongoDB
-            if city:
-                self._save_tree_to_mongodb(city)
+            self._save_tree_to_mongodb(city)
         except Exception as e:
             logging.error(f"Error initializing SimilaritySearchEngine: {e} - Failed to initialize the semantic search engine")
             raise

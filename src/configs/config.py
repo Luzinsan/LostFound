@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     GOOGLE_PLACES_API: str = ''
     TELEGRAM_BOT_API: str = ''
     API_BASE: str = ''
-    CITIES: List[str] = ["Москва", "Санкт-Петербург", "Нижний Новгород"]
+    CITIES: List[str] = ["Москва", "Санкт-Петербург", "Нижний Новгород", "Казань"]
     # https://developers.google.com/maps/documentation/places/web-service/place-types
     PLACE_TYPES: List[str] = ["restaurant","cafe","tourist_attraction","museum","performing_arts_theater","historical_place","art_gallery","park","lodging","church"]
     RESOURCES: List[str] = ["cities", "google_places"]

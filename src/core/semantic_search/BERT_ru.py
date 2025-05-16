@@ -5,7 +5,7 @@ import requests
 from urllib.parse import quote
 
 class RussianBERTEmbedder:
-    def __init__(self, model_name='cointegrated/rubert-tiny2', device=None, translate_en=True):
+    def __init__(self, model_name='cointegrated/rubert-tiny2', device=None, translate_en=False):
         self.translate_en = translate_en
         self.device = device or 'cpu'
         
@@ -24,11 +24,13 @@ class RussianBERTEmbedder:
             url = f"https://libretranslate.com/translate"
             data = {
                 'q': text,
-                'source': 'en',
+                'source': "auto",
                 'target': 'ru',
-                'format': 'text'
+                'format': 'text',
+                'api_key': "YOUR_API_KEY"
             }
             response = requests.post(url, json=data)
+            print(response.json())
             return response.json()['translatedText']
         except Exception as e:
             raise RuntimeError(f"Translation error: {str(e)}")
@@ -73,11 +75,3 @@ class RussianBERTEmbedder:
     def _has_english(self, text):
         return bool(re.search('[a-zA-Z]', text))
 
-
-
-
-# Пример вызова         
-# embedder = RussianBERTEmbedder()
-# text = "Hello world! Это пример текста на русском языке."
-# embedding = embedder.text_to_embedding(text)
-# print(embedding)

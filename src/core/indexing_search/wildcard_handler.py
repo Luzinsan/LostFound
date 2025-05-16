@@ -69,22 +69,17 @@ class WildcardHandler:
             
         query = query.lower()
         
-        # If no wildcard, try to find variations of the query
         if '*' not in query:
-            # First try exact match
             if query in self.lexicon:
                 return [query]
             
-            # Try stemmed version of the query
             stemmed_query = self._stem(query)
             if stemmed_query in self.lexicon:
                 return [stemmed_query]
             
-            # If no matches found, return the original query
             return [query]
             
         try:
-            # Handle different wildcard patterns
             if query.startswith('*') and query.endswith('*') and len(query) > 2:
                 # Case: *middle* - find terms containing the middle part
                 middle = query[1:-1]
@@ -110,7 +105,6 @@ class WildcardHandler:
         
         except Exception as e:
             logging.error(f"Error processing wildcard query '{query}': {e}")
-            # Return a limited set of terms as fallback
             return list(self.lexicon)[:100]
             
         return [query.replace('*', '')]
@@ -150,7 +144,6 @@ class WildcardHandler:
             candidates = self.reverse_index.get(suffix_gram, set())
             matches = {term for term in candidates if term.endswith(suffix)}
         else:
-            # Short suffix, check all terms
             matches = {term for term in self.lexicon if term.endswith(suffix)}
         
         return self._limit_matches(list(matches))

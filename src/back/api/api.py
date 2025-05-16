@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 
 from src.configs.config import settings
-from src.back.routers import search, system, locations, semantic_search
+from src.back.routers import index_search, system, locations, semantic_search, parsing
 from src.back.models.models import ErrorResponse
 
 logging.basicConfig(
@@ -114,7 +114,7 @@ app.include_router(
     tags=["locations"]
 )
 app.include_router(
-    search.router,
+    index_search.router,
     prefix="/api/v1",
     tags=["index_search"]
 )
@@ -122,6 +122,11 @@ app.include_router(
     semantic_search.router,
     prefix="/api/v1",
     tags=["semantic_search"]
+)
+app.include_router(
+    parsing.router,
+    prefix="/api/v1",
+    tags=["parsing"]
 )
 
 @app.get("/docs", include_in_schema=False)
@@ -162,6 +167,10 @@ def custom_openapi():
         {
             "name": "semantic_search",
             "description": "Intelligent semantic search using embedding technology and ball tree structure",
+        },
+        {
+            "name": "parsing",
+            "description": "API endpoints for data parsing operations and tasks management",
         },
     ]
     

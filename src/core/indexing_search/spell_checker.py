@@ -24,6 +24,7 @@ class SpellChecker:
         self.lexicon = lexicon
         self.max_distance = max_distance
         
+
     def get_suggestions(self, word: str) -> List[str]:
         """
         Get spelling suggestions for a word using Levenshtein distance.
@@ -43,7 +44,6 @@ class SpellChecker:
             if distance <= self.max_distance:
                 suggestions.append((term, distance))
                 
-        # Sort by distance and return only the terms
         return [term for term, _ in sorted(suggestions, key=lambda x: x[1])]
         
     def correct_query(self, query: str) -> str:
@@ -61,15 +61,13 @@ class SpellChecker:
         
         for word in words:
             if word in self.lexicon or '*' in word:
-                # Keep words that are in lexicon or contain wildcards
                 corrected_words.append(word)
             else:
                 suggestions = self.get_suggestions(word)
                 if suggestions:
-                    # Use the first suggestion (closest match)
                     corrected_words.append(suggestions[0])
                 else:
-                    # Keep original word if no suggestions found
                     corrected_words.append(word)
                     
         return ' '.join(corrected_words) 
+    

@@ -1,7 +1,8 @@
 import logging
-from celery import group
+from celery import group, chain
 from typing import List, Dict, Any, Optional
 import numpy as np
+import time
 
 import sys, os
 from pathlib import Path
@@ -13,6 +14,7 @@ from src.utils.mongodb_handler import mongo_manager
 from src.core.celery_app import app
 from src.core.semantic_search.BERT_ru import RussianBERTEmbedder
 from src.core.semantic_search.ball_tree import SimilaritySearchEngine
+from src.core.parsers import google_places
 
 
 @app.task
@@ -50,9 +52,9 @@ def build_city_ball_tree_task(city: str) -> dict:
             logging.error(f"No embeddings found for city: {city}")
             return {"status": "error", "message": f"No embeddings found for city: {city}"}
         
-        # Build ball tree and save to MongoDB
+      
         try:
-            search_engine = SimilaritySearchEngine(id_embedding_dict, city)
+            SimilaritySearchEngine(id_embedding_dict, city)
         except Exception as e:
             error_msg = f"Failed to build ball tree for city: {city}"
             logging.error(f"{error_msg} - Error during ball tree construction: {e}")
@@ -68,25 +70,34 @@ def build_city_ball_tree_task(city: str) -> dict:
         return {"status": "error", "message": str(e)}
 
 @app.task
-def build_all_cities_ball_trees_task() -> dict:
+def build_all_cities_ball_trees_task(cities: Optional[List[str]] = None) -> dict:
     """
-    Task to build ball trees for all cities.
+    Task to build ball trees for specified cities or all cities if none specified.
+    
+    Args:
+        cities: Optional list of city names. If None, processes all cities from settings.
+    
+    Returns:
+        Dictionary with status and results from each city's ball tree building task
     """
     try:
-        logging.info(f"[Task] Starting ball tree building for all cities: {settings.CITIES}")
+        cities_to_process = cities or settings.CITIES
+        
+        logging.info(f"[Task] Starting ball tree building for cities: {cities_to_process}")
         
         # Start tasks for each city
-        task_group = group(build_city_ball_tree_task.s(city) for city in settings.CITIES)
+        task_group = group(build_city_ball_tree_task.s(city) for city in cities_to_process)
         result = task_group.apply_async()
         results = result.join(disable_sync_subtasks=False)
         
         return {
             "status": "success",
-            "message": f"Ball trees built for all cities: {settings.CITIES}",
-            "results": len(results)
+            "message": f"Ball trees built for cities: {cities_to_process}",
+            "cities_processed": cities_to_process,
+            "results": results
         }
     except Exception as e:
-        logging.error(f"Error building ball trees for all cities: {e}")
+        logging.error(f"Error building ball trees for cities {cities_to_process}: {e}")
         return {"status": "error", "message": str(e)}
 
 @app.task
@@ -242,4 +253,132 @@ def search_all_cities_ball_tree_task(query: str, cities: List[str] = None, limit
             "status": "error",
             "message": str(e),
             "results": []
-        } 
+        }
+
+@app.task
+def create_embeddings_for_cities(cities: Optional[List[str]] = None) -> Dict:
+    """
+    Task to create embeddings for all places in specified cities or all cities if none specified.
+    Spawns parallel tasks for creating embeddings, both at the city level and place level.
+    
+    Args:
+        cities: Optional list of city names. If None, processes all cities from settings.
+                
+    Returns:
+        Dictionary with statistics about the embedding creation process
+    """
+    cities_to_process = cities or settings.CITIES
+    
+    logging.info(f"Starting batch embedding creation for cities: {cities_to_process}")
+    
+    task_group = group(create_embeddings_for_city.s(city) for city in cities_to_process)
+    result = task_group.apply_async()
+    
+    return {
+        "status": "success",
+        "message": f"Started parallel embedding creation tasks for {len(cities_to_process)} cities: {', '.join(cities_to_process)}",
+        "city_tasks_id": result.id
+    }
+
+
+@app.task
+def create_embeddings_for_city(city: str) -> Dict:
+    """
+    Task to create embeddings for all places in a specific city.
+    Runs as a subtask of create_embeddings_for_cities.
+    
+    Args:
+        city: City name to process
+                
+    Returns:
+        Dictionary with statistics about the embedding creation process for this city
+    """
+    try:
+        query = {"city": city}
+        places = mongo_manager.load(query, "places")
+        
+        if not places:
+            logging.info(f"No places found for city: {city}")
+            return {
+                "status": "success",
+                "city": city,
+                "places_count": 0,
+                "message": "No places found"
+            }
+            
+        places_count = len(places)
+        logging.info(f"Starting parallel tasks for {places_count} places in {city}")
+        
+        tasks = group(create_location_embeddings.s(place) for place in places)
+        result = tasks.apply_async()
+        
+        logging.info(f"Started {places_count} parallel embedding tasks for {city}")
+        
+        return {
+            "status": "success",
+            "city": city,
+            "places_count": places_count,
+            "task_id": result.id
+        }
+        
+    except Exception as e:
+        error_msg = f"Error processing city {city}: {str(e)}"
+        logging.error(error_msg)
+        return {
+            "status": "error",
+            "city": city,
+            "message": error_msg
+        }
+
+@app.task
+def create_location_embeddings(location_data: dict) -> Dict:
+    """
+    Creates embeddings for a location using the collected data.
+    
+    Args:
+        location_data: Dictionary containing location information including:
+             
+    Returns:
+        Dictionary with the original data plus the embedding
+    """
+    try:    
+        embedder = RussianBERTEmbedder()
+        location_data['embedding'] = embedder.text_to_embedding(location_data['search_text'] \
+                                                                + ' ' + location_data.get('reviews_flattened', '')).tolist()
+        location_data['timestamp_embedding'] = time.time()
+        mongo_manager.save(location_data, "places")
+        return location_data
+        
+    except Exception as e:
+        logging.error(f"Error creating embeddings for location {location_data.get('name', 'Unknown')}: {e}")
+        return location_data 
+
+@app.task
+def build_embeddings_and_ball_trees_task(cities: Optional[List[str]] = None) -> dict:
+    """
+    Task to create embeddings and build ball trees for specified cities or all cities if none specified.
+    
+    Args:
+        cities: Optional list of city names. If None, processes all cities from settings.
+    
+    Returns:
+        Dictionary with status and started task information
+    """
+    try:
+        cities_to_process = cities or settings.CITIES
+        
+        logging.info(f"[Task] Starting combined embeddings creation and ball tree building for cities: {cities_to_process}")
+        chain_result = chain(
+            create_embeddings_for_cities.s(cities_to_process),
+            build_all_cities_ball_trees_task.si(cities_to_process)
+        ).apply_async()
+        
+        return {
+            "status": "success",
+            "message": f"Tasks started for creating embeddings and building ball trees for cities: {cities_to_process}",
+            "cities_initiated": cities_to_process,
+            "chain_task_id": chain_result.id
+        }
+    except Exception as e:
+        logging.error(f"Error starting embeddings and ball trees tasks for cities {cities_to_process}: {e}")
+        return {"status": "error", "message": str(e)} 

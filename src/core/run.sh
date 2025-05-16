@@ -5,4 +5,4 @@
 # sudo systemctl status redis 
 
 # running celery workers
-uv run celery -A celery_app worker --loglevel=error
+uv run celery -A celery_app worker --loglevel=info

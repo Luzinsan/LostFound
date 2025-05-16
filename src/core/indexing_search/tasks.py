@@ -41,25 +41,23 @@ def build_location_index_task(location_id: str) -> dict:
         logging.error(f"Error building index for location {location_id}: {e} {type(location_data)}")
         return {"status": "error", "message": str(e)}
 
+
 @app.task
 def update_city_index_task(city: str, location_id: str, token_freqs: dict) -> dict:
     """
     Updates the inverted index for a city by adding or updating tokens for a location.
     """
     try:
-        # Use IndexManager to load and update city index
         index_manager = IndexManager()
         if not index_manager.load_index(city):
             logging.error(f"No index found for city: {city}")
             return {"status": "error", "message": f"No index found for city: {city}"}
         
-        # Update inverted index and document frequency
         city_index = index_manager.city_indexes[city]
         inverted_index = city_index["inverted_index"]
         doc_freq = city_index["doc_freq"]
         total_docs = city_index["total_docs"]
         
-        # Check if this document is already in the index
         is_new_doc = not any(location_id in postings for postings in inverted_index.values())
         if is_new_doc:
             total_docs += 1
@@ -70,7 +68,6 @@ def update_city_index_task(city: str, location_id: str, token_freqs: dict) -> di
             inverted_index[token][location_id] = freq
             doc_freq[token] = len(inverted_index[token])
         
-        # Save updated city index
         index_manager.build_and_save_index(city, {"google_places": []}, mongo_manager)
         
         return {
@@ -82,6 +79,7 @@ def update_city_index_task(city: str, location_id: str, token_freqs: dict) -> di
         logging.error(f"Error updating city index for {city}, location {location_id}: {e}")
         return {"status": "error", "message": str(e)}
 
+
 @app.task
 def build_city_locations_indices_task(city: str) -> dict:
     """
@@ -90,19 +88,16 @@ def build_city_locations_indices_task(city: str) -> dict:
     try:
         logging.info(f"[Task] Starting index building for all locations in city: {city}")
         
-        # Get city information
         city_data = mongo_manager.load({"city": city}, "cities")
         if not city_data or len(city_data) == 0:
             logging.error(f"No city data found for: {city}")
             return {"status": "error", "message": f"No city data found for: {city}"}
         
-        # Extract place IDs from city data
         place_ids = city_data[0].get('places', [])
         if not place_ids:
             logging.error(f"No place IDs found for city: {city}")
             return {"status": "error", "message": f"No place IDs found for city: {city}"}
         
-        # Load location data for each place ID
         location_data = []
         for place_id in place_ids:
             place_data = mongo_manager.load({"_id": place_id}, "places")
@@ -115,9 +110,7 @@ def build_city_locations_indices_task(city: str) -> dict:
             logging.error(f"No location data found for city: {city}")
             return {"status": "error", "message": f"No location data found for city: {city}"}
         
-        # Use IndexManager to build and save index
-        index_manager = IndexManager()
-        index_manager.build_and_save_index(city, location_data, mongo_manager)
+        IndexManager().build_and_save_index(city, location_data, mongo_manager)
         
         return {
             "status": "success",
@@ -127,27 +120,37 @@ def build_city_locations_indices_task(city: str) -> dict:
         logging.error(f"Error building indices for city {city}: {e}")
         return {"status": "error", "message": str(e)}
 
+
 @app.task
-def build_all_indices_task() -> dict:
+def build_all_indices_task(cities: Optional[List[str]] = None) -> dict:
     """
-    Task to build indices for all locations in all cities.
+    Task to build indices for locations in specified cities or all cities if none specified.
+    
+    Args:
+        cities: Optional list of city names. If None, processes all cities from settings.
+    
+    Returns:
+        Dictionary with status and results from each city's index building task
     """
     try:
-        logging.info(f"[Task] Starting index building for all cities: {settings.CITIES}")
+        cities_to_process = cities or settings.CITIES
         
-        # Start tasks for each city
-        task_group = group(build_city_locations_indices_task.s(city) for city in settings.CITIES)
+        logging.info(f"[Task] Starting index building for cities: {cities_to_process}")
+        
+        task_group = group(build_city_locations_indices_task.s(city) for city in cities_to_process)
         result = task_group.apply_async()
         results = result.join(disable_sync_subtasks=False)
         
         return {
             "status": "success",
-            "message": f"Indices built for all cities: {settings.CITIES}",
+            "message": f"Indices built for cities: {cities_to_process}",
+            "cities_processed": cities_to_process,
             "results": results
         }
     except Exception as e:
-        logging.error(f"Error building indices for all cities: {e}")
+        logging.error(f"Error building indices for cities {cities_to_process}: {e}")
         return {"status": "error", "message": str(e)}
+
 
 @app.task
 def search_index_task(city: str, query: str, limit: int = 10, types: Optional[List[str]] = None) -> dict:
@@ -168,7 +171,6 @@ def search_index_task(city: str, query: str, limit: int = 10, types: Optional[Li
     try:
         logging.info(f"[Task] Searching for '{query}' in city: {city}")
         
-        # Use IndexManager to load city index
         index_manager = IndexManager()
         if not index_manager.load_index(city, mongo_manager):
             logging.error(f"No index found for city: {city}")
@@ -178,18 +180,14 @@ def search_index_task(city: str, query: str, limit: int = 10, types: Optional[Li
                 "results": []
             }
         
-        # Use IndexManager to perform search
         results, query_tokens = index_manager.search(city, query)
         
-        # Get additional document details from MongoDB
         filtered_results = []
         for result in results:
             doc_id = result["doc_id"]
             
-            # Базовый фильтр для загрузки документа
             mongo_filter = {"_id": doc_id}
             
-            # Если указаны типы, добавляем их в фильтр
             if types and len(types) > 0:
                 mongo_filter["types"] = {"$in": types}
                 
@@ -205,13 +203,10 @@ def search_index_task(city: str, query: str, limit: int = 10, types: Optional[Li
                 })
                 filtered_results.append(result)
         
-        # Sort by TF-IDF score
         filtered_results.sort(key=lambda x: x['score'], reverse=True)
         
-        # Limit results
         limited_results = filtered_results[:limit]
         
-        # Check if query was corrected
         corrected_query = None
         if query_tokens and query_tokens != query.split():
             corrected_query = ' '.join(query_tokens)
@@ -234,6 +229,7 @@ def search_index_task(city: str, query: str, limit: int = 10, types: Optional[Li
             "results": []
         }
 
+
 @app.task
 def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10, types: Optional[List[str]] = None) -> dict:
     """
@@ -249,23 +245,19 @@ def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10
         Dictionary with combined search results from all cities
     """
     try:
-        # Use all cities from settings if none specified
         if cities is None:
             cities = settings.CITIES
             
         logging.info(f"[Task] Searching for '{query}' across cities: {cities}")
         
-        # Search in each city
         tasks = []
         for city in cities:
             tasks.append(search_index_task.s(city, query, limit, types))
             
-        # Execute all search tasks in parallel
         task_group = group(tasks)
         result = task_group.apply_async()
         city_results = result.join(disable_sync_subtasks=False)
         
-        # Combine and aggregate results
         all_results = []
         total_found = 0
         combined_tokens = set()
@@ -276,7 +268,6 @@ def search_all_cities_task(query: str, cities: List[str] = None, limit: int = 10
                 total_found += city_result.get("total_found", 0)
                 combined_tokens.update(city_result.get("query_tokens", []))
                 
-        # Sort combined results by score
         all_results = sorted(all_results, key=lambda x: x.get("score", 0), reverse=True)[:limit]
         
         return {

@@ -6,7 +6,6 @@ from nltk.stem.snowball import SnowballStemmer
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union, Tuple
 
-
 import sys, os
 from pathlib import Path
 
@@ -18,6 +17,8 @@ from src.core.indexing_search.spell_checker import SpellChecker
 from src.utils.mongodb_handler import MongoDBManager
 from src.configs.config import settings
 
+
+
 class IndexManager:
     """
     Manages the construction and searching of inverted indexes, now city-specific.
@@ -25,7 +26,7 @@ class IndexManager:
     TF-IDF scoring, and lexicon building for each city separately.
     """
     def __init__(self):
-        self.city_indexes = {} # Dictionary to hold indexes for each city
+        self.city_indexes = {}
         self.stemmer = SnowballStemmer("russian")
         self._download_nltk_resources()
         self.stop_words = self._load_stop_words()
@@ -41,6 +42,7 @@ class IndexManager:
         except LookupError:
             nltk.download('stopwords')
 
+
     def _load_stop_words(self) -> set:
         """
         Loads stop words from NLTK corpus.
@@ -53,24 +55,21 @@ class IndexManager:
             return russian_stopwords
         except Exception as e:
             logging.error(f"Error loading stop words from NLTK: {e}")
-            return set()  # Return empty set if loading fails
+            return set()
+
 
     def _tokenize(self, text: str) -> List[str]:
         """
         Tokenizes text, supports Cyrillic and Latin, and applies stemming.
         """
         try:
-            # Convert to lowercase and remove special characters, numbers
             text = re.sub(r'[^а-яёa-z\s]', ' ', text.lower())
-            
-            # Split into words and filter out stop words and short words
             tokens = [word for word in text.split() if word and len(word) >= 3 and word not in self.stop_words]
-            
-            # Apply stemming
             return [self._stem(token) for token in tokens]
         except Exception as e:
             logging.error(f"Error in tokenization: {e}")
             return []
+
 
     def _stem(self, word: str) -> str:
         """
@@ -104,8 +103,7 @@ class IndexManager:
             if not tokens:
                 logging.warning(f"No valid tokens found in search_text for document {doc_id}")
                 return
-
-            # Update inverted index and document frequency
+            
             for token in tokens:
                 inverted_index[token][doc_id] = inverted_index[token].get(doc_id, 0) + 1
                 city_index["doc_freq"][token] = len(inverted_index[token])
@@ -114,6 +112,7 @@ class IndexManager:
             city_index["terms_lexicon"].update(tokens)
         except Exception as e:
             logging.error(f"Error building index for document {doc_id} in city {city_name}: {e}")
+
 
     def _tfidf(self, city_name: str, token: str, doc_id: str) -> float:
         """
@@ -147,6 +146,7 @@ class IndexManager:
             logging.error(f"Error calculating TF-IDF for token {token} in document {doc_id}: {e}")
             return 0.0
 
+
     def build_lexicon(self, city_name: str):
         """
         Builds a lexicon of terms for correction using a k-gram index for a specific city.
@@ -160,7 +160,6 @@ class IndexManager:
             
             city_index["wildcard_handler"] = WildcardHandler(terms_lexicon)
             
-            # Build k-grams for all terms
             term_kgrams = city_index["term_kgrams"]
             for term in terms_lexicon:
                 padded = f"${term}$"
@@ -169,6 +168,7 @@ class IndexManager:
         except Exception as e:
             logging.error(f"Error building lexicon for city {city_name}: {e}")
 
+
     def build_and_save_index(self, city_name: str, locations_data: List[Dict[str, Any]], mongo_manager: MongoDBManager):
         """
         Builds the inverted index for a specific city from the aggregated location data and saves it to MongoDB.
@@ -176,7 +176,6 @@ class IndexManager:
         try:
             logging.info(f"[IndexManager] Building index for city: {city_name}")
             
-            # Reset index data for this city
             self.city_indexes[city_name] = {
                 "inverted_index": defaultdict(dict),
                 "doc_freq": defaultdict(int),
@@ -187,23 +186,18 @@ class IndexManager:
             }
 
             for location_data in locations_data:
-                # Get or generate search_text
                 search_text = location_data.get('search_text', '') #+ ' ' + location_data.get('reviews_flattened', '')
                 if not search_text:
-                    # If search_text doesn't exist, generate it
                     search_text = google_places.GooglePlacesParser(
                         api_key=settings.GOOGLE_PLACES_API).generate_search_text(location_data)
-                    # Update the MongoDB record
                     location_data['search_text'] = search_text
                     mongo_manager.save(location_data, "places")
                     search_text += ' ' + location_data.get('reviews_flattened', '')
                 
                 self.build_index(city_name, location_data['_id'], search_text)
 
-            # Build lexicon after all documents are processed
             self.build_lexicon(city_name)
 
-            # Prepare index data for MongoDB
             index_data = {
                 "_id": f"cidx_{city_name}",
                 "inverted_index": dict(self.city_indexes[city_name]["inverted_index"]),
@@ -212,11 +206,11 @@ class IndexManager:
                 "terms_lexicon": list(self.city_indexes[city_name]["terms_lexicon"])
             }
 
-            # Save to MongoDB
             mongo_manager.save(index_data, "city_indices")
             logging.info(f"[IndexManager] Index for {city_name} built and saved to MongoDB")
         except Exception as e:
             logging.error(f"[IndexManager] Error building and saving index for {city_name}: {e}")
+
 
     def load_index(self, city_name: str, mongo_manager: MongoDBManager) -> bool:
         """
@@ -239,7 +233,6 @@ class IndexManager:
                 "term_kgrams": defaultdict(set)
             }
             
-            # Rebuild k-grams
             self.build_lexicon(city_name)
             
             logging.info(f"[IndexManager] Index for {city_name} loaded from MongoDB")
@@ -247,6 +240,7 @@ class IndexManager:
         except Exception as e:
             logging.error(f"[IndexManager] Error loading index for {city_name} from MongoDB: {e}")
             return False
+
 
     def search(self, city_name: str, query: str) -> Tuple[List[Dict[str, Any]], List[str]]:
         """
@@ -264,15 +258,12 @@ class IndexManager:
             inverted_index = city_index["inverted_index"]
             results = defaultdict(float)
             
-            # Initialize spell checker with city's lexicon
             spell_checker = SpellChecker(city_index['terms_lexicon'])
             
-            # Correct spelling in the query
             corrected_query = spell_checker.correct_query(query)
             if corrected_query != query:
                 logging.info(f"Query corrected from '{query}' to '{corrected_query}'")
             
-            # Process query with wildcard support
             wildcard_handler = WildcardHandler(city_index['terms_lexicon'])
             tokens = wildcard_handler.process_query(corrected_query)
             
@@ -281,7 +272,6 @@ class IndexManager:
                     for doc_id in inverted_index[token]:
                         results[doc_id] += self._tfidf(city_name, token, doc_id)
             
-            # Convert results to list of dictionaries
             return [
                 {
                     "doc_id": doc_id,
@@ -293,3 +283,4 @@ class IndexManager:
         except Exception as e:
             logging.error(f"[IndexManager]: Error searching index for query '{query}' in city {city_name}: {e}")
             return []
+        

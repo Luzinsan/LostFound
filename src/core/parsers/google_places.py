@@ -149,7 +149,7 @@ class GooglePlacesParser(BaseParser):
                     if not \
                         (attr in priority_fields 
                          or attr.startswith('_') 
-                         or attr in {'id', 'timestamp_response','websiteUri','reviews','reviews_flattened','timestamp_scraping'}):
+                         or attr in {'id', 'timestamp_response','websiteUri','googleMapsUri','reviews','reviews_flattened','photos','timestamp_scraping'}):
                         search_terms.append(process_value(attr, value))
             except Exception as e:
                 logging.error(f"Error processing additional fields: {e}")
@@ -236,14 +236,18 @@ class GooglePlacesParser(BaseParser):
             mongo_manager.save(places_data_per_page, "places")
             for place in places_data_per_page:
                 new_place_ids.append(place["_id"])
-                if (website_uri := place.get("websiteUri")) and "description" not in place:
-                    logging.info(f"Scraping {website_uri}...")
-                    try:
-                        tasks.parse_web_scrape_task\
-                            .apply_async(args=[website_uri], 
-                                         link=tasks.update_place_description_task.s(place))
-                    except Exception as e:
-                        logging.error(f"Error during scraping {website_uri}: {e}")
+                if "description" not in place:
+                    if (website_uri := place.get("websiteUri"))  :
+                        logging.info(f"Scraping {website_uri}...")
+                        try:
+                            tasks.parse_web_scrape_task\
+                                .apply_async(args=[website_uri], 
+                                            link=tasks.update_place_description_task.s(place))
+                        except Exception as e:
+                            logging.error(f"Error during scraping {website_uri}: {e}")
+                    else:
+                        logging.info(f"No websiteUri for {place['displayName']}")
+                        tasks.update_place_description_task.s(None, place).apply_async()
             all_places_data.extend(places_data_per_page)
             if not (next_page_token := response.get("nextPageToken")):
                 break
