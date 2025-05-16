@@ -199,7 +199,8 @@ def search_index_task(city: str, query: str, limit: int = 10, types: Optional[Li
                     "name": doc_data.get("displayName", {}),
                     "address": doc_data.get("shortFormattedAddress", "Unknown"),
                     "types": doc_data.get("types", []),
-                    "summary": doc_data.get("editorialSummary", 'Unknown')
+                    "summary": doc_data.get("editorialSummary", 'Unknown'),
+                    "photos": doc_data.get("photos", None)
                 })
                 filtered_results.append(result)
         

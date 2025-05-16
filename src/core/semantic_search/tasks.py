@@ -179,6 +179,7 @@ def search_ball_tree_task(city: str, query: str, limit: int = 10, types: Optiona
                         "address": doc_data.get("shortFormattedAddress", "Unknown"),
                         "types": doc_data.get("types", []),
                         "summary": doc_data.get("editorialSummary", 'Unknown'),
+                        "photos": doc_data.get("photos", None),
                         "city": city 
                     })
             except Exception as e:
