@@ -6,8 +6,23 @@ import { Link } from 'react-router-dom';
  * Компонент карточки локации
  */
 const LocationCard = ({ location }) => {
+  // Используем первое фото, если доступно
+  const photoUrl = location.photos && location.photos.length > 0 
+    ? location.photos[0] 
+    : null;
+    
   return (
     <div className="card overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1">
+      {photoUrl && (
+        <div className="h-48 overflow-hidden">
+          <img 
+            src={photoUrl} 
+            alt={location.name} 
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+      
       <div className="p-5">
         <h3 className="font-semibold text-lg">{location.name}</h3>
         <p className="text-gray-500 text-sm mb-2">{location.city}</p>
@@ -19,7 +34,7 @@ const LocationCard = ({ location }) => {
         )}
         
         {location.summary && (
-          <p className="text-gray-600 text-sm mb-3">{location.summary}</p>
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{location.summary}</p>
         )}
         
         <div className="flex flex-wrap gap-2 mb-4">
@@ -33,12 +48,28 @@ const LocationCard = ({ location }) => {
           ))}
         </div>
         
-        <Link 
-          to={`/locations/${location.doc_id}`}
-          className="btn btn-primary w-full text-center"
-        >
-          View Details
-        </Link>
+        <div className="flex gap-2">
+          <Link 
+            to={`/locations/${location.doc_id}`}
+            className="btn btn-primary flex-1 text-center"
+          >
+            View Details
+          </Link>
+          
+          {location.googleMapsUri && (
+            <a 
+              href={location.googleMapsUri}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="btn btn-outline flex items-center justify-center px-3"
+              title="Open in Google Maps"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+              </svg>
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -51,7 +82,9 @@ LocationCard.propTypes = {
     city: PropTypes.string.isRequired,
     types: PropTypes.arrayOf(PropTypes.string),
     address: PropTypes.string,
-    summary: PropTypes.string
+    summary: PropTypes.string,
+    googleMapsUri: PropTypes.string,
+    photos: PropTypes.arrayOf(PropTypes.string)
   }).isRequired
 };
 

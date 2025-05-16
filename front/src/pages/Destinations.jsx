@@ -6,36 +6,12 @@ import {
   CITY_TAGS, 
   CITY_DESCRIPTIONS, 
   DEFAULT_TAGS, 
-  getCityImageBySize 
+  getCityImageBySize,
+  CITY_IMAGES
 } from '../constants/cityData';
 
-// Значения по умолчанию для городов без данных
 const defaultImage = 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=600&q=80';
 const defaultTags = ['Travel', 'Explore'];
-
-// Дополнительные изображения для городов (временное решение до добавления изображений на бэкенд)
-const cityImages = {
-  'Москва': 'https://images.unsplash.com/photo-1513326738677-b964603b136d?auto=format&fit=crop&w=600&q=80',
-  'Санкт-Петербург': 'https://images.unsplash.com/photo-1556610961-2fecc5927173?auto=format&fit=crop&w=600&q=80',
-  'Нижний Новгород': 'https://icdn.lenta.ru/images/2021/03/11/16/20210311164138357/wide_4_3_65e872eb0d009429c7df3a5a48af7af9.jpg',
-  'Сочи': 'https://images.unsplash.com/photo-1597591723433-e7b40d988d89?auto=format&fit=crop&w=600&q=80'
-};
-
-// Теги для городов (более содержательные и тематические)
-const cityTags = {
-  'Москва': ['История', 'Культура', 'Столица'],
-  'Санкт-Петербург': ['Архитектура', 'Искусство', 'Музеи'],
-  'Нижний Новгород': ['История', 'Волга', 'Природа'],
-  'Сочи': ['Море', 'Горы', 'Курорт']
-};
-
-// Подробные описания городов
-const cityDescriptions = {
-  'Москва': 'Москва — столица России, один из крупнейших культурных и экономических центров мира. Здесь расположены знаменитые достопримечательности, включая Кремль, Красную площадь, собор Василия Блаженного и Третьяковскую галерею. Город предлагает множество музеев, театров, концертных залов, а также имеет обширную сеть парков и зеленых зон.',
-  'Санкт-Петербург': 'Санкт-Петербург — культурная столица России, город музеев и выдающейся архитектуры. Известен разводными мостами, фонтанами Петергофа, Эрмитажем и Русским музеем. Город построен на многочисленных островах в дельте реки Невы и славится своими белыми ночами, каналами и дворцовыми ансамблями.',
-  'Нижний Новгород': 'Нижний Новгород — один из старейших и живописнейших городов России, расположенный на слиянии рек Оки и Волги. Нижегородский кремль, основанный в 1221 году, является историческим центром города. Отсюда открывается великолепный вид на речные просторы и старинные храмы. Город славится своей богатой историей, традициями и уникальной архитектурой.',
-  'Сочи': 'Сочи — курортный город на побережье Чёрного моря, знаменитый своим уникальным сочетанием пляжного и горнолыжного отдыха. Здесь можно утром купаться в тёплом море, а днём кататься на лыжах в горах Красной Поляны. Город принимал Зимние Олимпийские игры 2014 года и предлагает отличную инфраструктуру: дендрарий, парк "Ривьера", океанариум и многочисленные СПА-курорты.'
-};
 
 const Destinations = () => {
   const [cities, setCities] = useState([]);
@@ -46,10 +22,11 @@ const Destinations = () => {
     const fetchCities = async () => {
       try {
         setLoading(true);
-        // Получаем детальную информацию о всех городах
         const citiesData = await locationsService.getDetailedCitiesInfo();
         
         if (citiesData && citiesData.length > 0) {
+          console.log("[Destinations] Loaded cities:", citiesData.map(c => c.city));
+          
           // Форматируем данные для отображения в UI
           const formattedCities = citiesData.map((cityData, index) => {
             // Используем описание из констант или из Wikipedia как запасной вариант
@@ -74,7 +51,9 @@ const Destinations = () => {
             };
           });
           setCities(formattedCities);
+          console.log("[Destinations] Formatted cities:", formattedCities.map(c => c.name));
         } else {
+          console.log("[Destinations] No cities data received");
           setCities([]);
         }
         setError(null);
@@ -149,7 +128,11 @@ const Destinations = () => {
                 ))}
               </div>
               <div className="mt-auto">
-                <Link to={`/destinations/${encodeURIComponent(destination.name)}`} className="btn btn-outline w-full">
+                <Link 
+                  to={`/destinations/${encodeURIComponent(destination.name)}`} 
+                  className="btn btn-outline w-full"
+                  onClick={() => console.log(`[Destinations] Navigating to: /destinations/${encodeURIComponent(destination.name)} for city "${destination.name}"`)}
+                >
                   View Details
                 </Link>
               </div>

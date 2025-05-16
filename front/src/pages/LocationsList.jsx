@@ -22,13 +22,8 @@ const LocationsList = () => {
     total: 0
   });
   const [searchMode, setSearchMode] = useState(false);
-  
-  // Используем useRef для отслеживания предыдущих параметров запроса
-  // и предотвращения дублирующих запросов
   const prevRequestRef = useRef(null);
   const fetchTimerRef = useRef(null);
-  
-  // Извлекаем параметры из URL
   const page = parseInt(searchParams.get('page') || '1', 10);
   const city = searchParams.get('city') || undefined;
   const typesParam = searchParams.get('types');
@@ -38,10 +33,8 @@ const LocationsList = () => {
   
   // Мемоизированная функция запроса данных
   const fetchData = useCallback(async () => {
-    // Формируем уникальный ключ запроса для предотвращения дублирования
     const requestKey = `query=${query}&city=${city || ''}&types=${typesParam || ''}&page=${page}&searchType=${searchType}`;
     
-    // Предотвращаем дублирующиеся запросы
     if (prevRequestRef.current === requestKey) {
       console.log('[LocationsList] Skipping duplicate request:', requestKey);
       return;
@@ -52,9 +45,7 @@ const LocationsList = () => {
     setError(null);
     
     try {
-      // Проверяем, есть ли поисковый запрос
       if (query && query.trim()) {
-        // Используем поиск с выбранным типом
         let searchResult;
         let searchTypeStr = searchType === 'semantic' ? 'Semantic' : 'Index';
         
@@ -88,9 +79,7 @@ const LocationsList = () => {
         } catch (searchError) {
           console.error(`[LocationsList] ${searchTypeStr} search error:`, searchError);
           
-          // Более подробная обработка ошибок поиска
           if (searchError.response) {
-            // Серверная ошибка с ответом
             const status = searchError.response.status;
             const errorData = searchError.response.data;
             
@@ -112,7 +101,6 @@ const LocationsList = () => {
       } else {
         console.log('[LocationsList] Making standard locations request:', requestKey);
         
-        // Обычный запрос списка локаций
         const response = await locationsService.getLocations(page, pagination.perPage, {
           city,
           types: types || []
@@ -120,7 +108,6 @@ const LocationsList = () => {
         
         console.log('[LocationsList] Locations response:', response);
         
-        // Обновляем состояние компонента
         setLocations(response.results || []);
         setPagination({
           page: response.pagination?.page || 1,
@@ -139,9 +126,7 @@ const LocationsList = () => {
     }
   }, [page, city, typesParam, types, query, searchType, pagination.perPage]);
   
-  // Эффект для загрузки данных при изменении URL параметров с дебаунсингом
   useEffect(() => {
-    // Отображаем отладочную информацию
     console.log('[LocationsList] URL params changed:', { 
       page, 
       city, 
@@ -161,7 +146,6 @@ const LocationsList = () => {
       fetchData();
     }, 300); // Задержка в 300мс для предотвращения слишком частых запросов
     
-    // Очищаем таймер при размонтировании
     return () => {
       if (fetchTimerRef.current) {
         clearTimeout(fetchTimerRef.current);
@@ -169,9 +153,8 @@ const LocationsList = () => {
     };
   }, [fetchData]);
   
-  // Обработчик изменения фильтров - объединяем все изменения в одно обновление URL
+
   const handleFilterChange = (newFilters) => {
-    // Объединяем текущие параметры с новыми, отфильтровывая пустые значения
     const newParams = { page: '1' };
     
     if (newFilters.city) {
@@ -181,21 +164,17 @@ const LocationsList = () => {
     if (newFilters.types && newFilters.types.length > 0) {
       newParams.types = newFilters.types.join(',');
     }
-    
-    // Сохраняем поисковый запрос, если он есть
     if (query && query.trim()) {
       newParams.query = query;
     }
-    
     if (newFilters.searchType) {
       newParams.searchType = newFilters.searchType;
     }
-    
     console.log('[LocationsList] Setting new filters:', newParams);
     setSearchParams(newParams);
   };
   
-  // Обработчик изменения страницы
+
   const handlePageChange = (newPage) => {
     const newParams = { ...Object.fromEntries(searchParams), page: newPage.toString() };
     setSearchParams(newParams);

@@ -81,7 +81,10 @@ const CityDetails = () => {
         
         // Используем параметр city для получения информации о конкретном городе
         const decodedCityName = decodeURIComponent(cityName);
+        console.log("[CityDetails] Fetching info for:", decodedCityName);
+        
         const cityData = await locationsService.getCityInfo(decodedCityName);
+        console.log("[CityDetails] Received data:", cityData);
         
         if (cityData && cityData.city) {
           setCityInfo(cityData);
@@ -94,11 +97,11 @@ const CityDetails = () => {
           
           setError(null);
         } else {
-          throw new Error(`City ${cityName} not found`);
+          throw new Error(`City ${decodedCityName} not found`);
         }
       } catch (err) {
         console.error('Failed to load city details:', err);
-        setError('Failed to load city information. Please try again later.');
+        setError(`Failed to load city information for "${decodeURIComponent(cityName)}". Please try again later.`);
       } finally {
         setLoading(false);
       }
