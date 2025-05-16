@@ -249,6 +249,23 @@ const LocationDetails = () => {
               </div>
             )}
             
+            {/* Интерактивная карта Google Maps */}
+            <div className="mb-4">
+              <h3 className="font-medium text-gray-700 mb-2">Interactive Map:</h3>
+              <div className="rounded overflow-hidden h-64 border border-gray-200">
+                <iframe
+                  title={`Map of ${location.name}`}
+                  src={`https://maps.google.com/maps?q=${encodeURIComponent(location.name)},${encodeURIComponent(location.address || location.city)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+            </div>
+            
             {/* Информация о городе */}
             <div className="mb-4">
               <p className="text-gray-600 mb-2">
