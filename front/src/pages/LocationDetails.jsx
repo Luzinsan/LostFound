@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import BaseLayout from '../components/Layout/BaseLayout';
 import locationsService from '../api/locationsService';
+import ImageGallery from '../components/ImageGallery';
 
 /**
  * Компонент для отображения отзыва
@@ -222,30 +223,11 @@ const LocationDetails = () => {
             {/* Карта или фотографии */}
             {location.photos && location.photos.length > 0 ? (
               <div className="mb-4">
-                <div className="bg-gray-200 rounded overflow-hidden h-48 mb-2">
-                  <img 
-                    src={location.photos[0]} 
-                    alt={location.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                {location.photos.length > 1 && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {location.photos.slice(1, 4).map((photo, index) => (
-                      <div key={index} className="bg-gray-200 rounded overflow-hidden h-20">
-                        <img 
-                          src={photo} 
-                          alt={`${location.name} ${index + 2}`} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <ImageGallery photos={location.photos} locationName={location.name} />
               </div>
             ) : (
               <div className="bg-gray-200 h-48 flex items-center justify-center mb-4">
-                <span className="text-gray-600">Map Preview</span>
+                <span className="text-gray-600">No Images Available</span>
               </div>
             )}
             
