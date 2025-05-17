@@ -4,7 +4,8 @@ import logging
 import sys
 import os
 from pathlib import Path
-import openai
+from openai import OpenAI
+from src.configs.config import settings  
 
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 
@@ -17,6 +18,12 @@ from src.core.semantic_search.tasks import (
     build_embeddings_and_ball_trees_task
 )
 from src.back.models.models import SearchResponse
+
+
+client = OpenAI(
+    base_url="https://api.aimlapi.com/v1",
+    api_key= settings.GPT4_API_KEY,
+)
 
 router = APIRouter(
     prefix="/LLM",
@@ -41,8 +48,8 @@ RESULT_SUMMARY_PROMPT = """Проанализируй топ-{limit} резул�
 
 def gpt_query(query: str) -> str:
     try:
-        response = openai.ChatCompletion.create(
-            model=GPT_MODEL,
+        response = client.chat.completions.create(  # Изменен вызов API
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a search query optimization assistant"},
                 {"role": "user", "content": QUERY_REPHRASE_PROMPT.format(query=query)}
@@ -53,7 +60,7 @@ def gpt_query(query: str) -> str:
         return response.choices[0].message.content.strip()
     except Exception as e:
         logging.error(f"GPT-4o query error: {str(e)}")
-        return query  
+        return query 
     
 def gpt_summary(results: List[Dict], limit: int) -> str:
     try:
@@ -62,8 +69,8 @@ def gpt_summary(results: List[Dict], limit: int) -> str:
             for i, res in enumerate(results[:limit])
         ])
         
-        response = openai.ChatCompletion.create(
-            model=GPT_MODEL,
+        response = client.chat.completions.create(  # Изменен вызов API
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a search results summarizer"},
                 {"role": "user", "content": RESULT_SUMMARY_PROMPT.format(limit=limit, results=results_str)}
@@ -75,6 +82,7 @@ def gpt_summary(results: List[Dict], limit: int) -> str:
     except Exception as e:
         logging.error(f"GPT-4o summary error: {str(e)}")
         return "Не удалось сгенерировать суммаризацию результатов"
+
 
 @router.get("/search", response_model=SearchResponse)
 async def semantic_search(
@@ -239,3 +247,4 @@ async def create_search_data(
             status_code=500,
             detail=f"Failed to start semantic search data creation: {str(e)}"
         )
+    

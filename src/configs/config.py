@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     OPENTRIPMAP_API_KEY: str = ''
     GOOGLE_PLACES_API: str = ''
     TELEGRAM_BOT_API: str = ''
+    GPT4_API_KEY: str = ''
     API_BASE: str = ''
     CITIES: List[str] = ["Москва", "Санкт-Петербург", "Нижний Новгород"]
     # https://developers.google.com/maps/documentation/places/web-service/place-types
