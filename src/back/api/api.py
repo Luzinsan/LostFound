@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 
 from src.configs.config import settings
-from src.back.routers import index_search, system, locations, semantic_search, parsing
+from src.back.routers import index_search, system, locations, semantic_search, parsing, llm_search
 from src.back.models.models import ErrorResponse
 
 logging.basicConfig(
@@ -124,6 +124,11 @@ app.include_router(
     tags=["semantic_search"]
 )
 app.include_router(
+    llm_search.router,
+    prefix="/api/v1",
+    tags=["LLM"]
+)
+app.include_router(
     parsing.router,
     prefix="/api/v1",
     tags=["parsing"]
@@ -214,3 +219,6 @@ async def favicon():
         return FileResponse(icon_path, media_type="image/x-icon")
     else:
         return Response(status_code=204) 
+    
+
+
