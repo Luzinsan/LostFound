@@ -6,7 +6,6 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from src.configs.config import settings
 
-# Create the main Celery app
 app = Celery('lost_found',
              broker=settings.BROKER_URL,
              backend=settings.RESULT_BACKEND)

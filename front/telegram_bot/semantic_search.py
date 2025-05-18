@@ -25,7 +25,7 @@ async def semantic_search_command(update: Update, context: ContextTypes.DEFAULT_
     """
     Пример команды: /semantic Москва интересный музей
     Делает GET-запрос:
-    GET {API_BASE}/api/v1/semantic/city/{city}?query=<запрос>&limit=10
+    GET {API_BASE}/semantic/city/{city}?query=<запрос>&limit=10
     """
     try:
         args = context.args
@@ -35,7 +35,7 @@ async def semantic_search_command(update: Update, context: ContextTypes.DEFAULT_
 
         city = args[0]
         query = " ".join(args[1:])
-        url = f"{settings.API_BASE}/api/v1/semantic/city/{city}"
+        url = f"{settings.API_BASE}/semantic/city/{city}"
         params = {"query": query, "limit": 10}
 
         async with aiohttp.ClientSession() as session:
@@ -79,7 +79,7 @@ async def semantic_search_all_command(update: Update, context: ContextTypes.DEFA
             return
 
         query = " ".join(args)
-        url = f"{settings.API_BASE}/api/v1/semantic/all"
+        url = f"{settings.API_BASE}/semantic/all"
         params = {"query": query, "limit": 10}
 
         async with aiohttp.ClientSession() as session:

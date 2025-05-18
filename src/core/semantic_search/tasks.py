@@ -112,9 +112,8 @@ def search_ball_tree_task(city: str, query: str, limit: int = 10, types: Optiona
         types: Optional list of place types to filter by
     """
     try:
-        logging.info(f"[Task] Searching for '{query}' in city: {city}")
+        logging.info(f"[Task] Searching for '{query}' in city: {city} with types: {types} and limit: {limit}")
         
-        # Create search engine from MongoDB data
         try:
             search_engine = SimilaritySearchEngine.from_mongodb(city)
             if search_engine is None:

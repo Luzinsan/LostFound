@@ -33,6 +33,8 @@ class DetailedPlace(BasePlace):
     price_level: Optional[str] = Field(None, description="Price level (0-4)")
     reviews: Optional[List[Review]] = Field(None, description="List of reviews")
     googleMapsUri: Optional[str] = Field(None, description="Google Maps URL of the place")
+    search_text: Optional[str] = Field(None, description="Search text of the place")
+    reviews_flattened: Optional[str] = Field(None, description="Flattened reviews of the place")
 
 class SearchResponse(BaseModel):
     """Model representing the response from a search operation."""

@@ -64,17 +64,14 @@ async def semantic_search(
                 status_code=400,
                 detail=error_msg
             )
-        
         cities = cities if cities else settings.CITIES
-        
-        if len(cities) == 1:
-            result = search_ball_tree_task.delay(cities[0], query, limit, types)
-        else:
-            result = search_all_cities_ball_tree_task.delay(query, cities, limit, types)
-        
+        result = (
+            search_ball_tree_task.delay(cities[0], query, limit, types) 
+            if len(cities) == 1 
+            else search_all_cities_ball_tree_task.delay(query, cities, limit, types)
+        )
         search_results = result.get()
         
-        # Handle both success and partial_success (some cities might fail but others succeed)
         if search_results.get("status") not in ["success", "partial_success"]:
             error_msg = search_results.get("message", "Semantic search failed")
             logging.error(f"{error_msg} - Search task returned error status")
@@ -82,7 +79,6 @@ async def semantic_search(
                 status_code=500,
                 detail=error_msg
             )
-        
         return search_results
     except HTTPException:
         raise

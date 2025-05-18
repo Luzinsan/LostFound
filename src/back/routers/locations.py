@@ -145,7 +145,9 @@ async def get_location_details(
             price_level=location.get("priceLevel"),
             reviews=reviews,
             googleMapsUri=location.get("googleMapsUri", None),
-            photos=location.get("photos", None)
+            photos=location.get("photos", None),
+            search_text=location.get("search_text", None),
+            reviews_flattened=location.get("reviews_flattened", None)
         )
         
         return result

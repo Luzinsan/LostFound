@@ -37,7 +37,7 @@ async def search_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         city = args[0]
         query = " ".join(args[1:])
 
-        url = f"{settings.API_BASE}/api/v1/index_search/city/{city}"
+        url = f"{settings.API_BASE}/index_search/city/{city}"
         params = {"query": query, "limit": 10}
 
         async with aiohttp.ClientSession() as session:
@@ -83,7 +83,7 @@ async def search_all_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return
 
         query = " ".join(args)
-        url = f"{settings.API_BASE}/api/v1/index_search/all"
+        url = f"{settings.API_BASE}/index_search/all"
         params = {"query": query, "limit": 10}
 
         async with aiohttp.ClientSession() as session:

@@ -126,7 +126,7 @@ app.include_router(
 app.include_router(
     llm_search.router,
     prefix="/api/v1",
-    tags=["LLM"]
+    tags=["rag"]
 )
 app.include_router(
     parsing.router,
