@@ -1,0 +1,233 @@
+{
+  "Москва": [
+    {
+      "query": "Где попробовать современную русскую авторскую кухню с панорамным видом?",
+      "locations": [
+        "ChIJDdZnvLZLtUYRBIZ3iG6k_Y0",
+        "ChIJ9avUQyNKtUYR4HfeV6_B7sQ",
+        "ChIJ45YzjcxLtUYRSsslHNkDy3A",
+        "ChIJJXXJr1pKtUYR3KROfZSs7-E",
+        "ChIJ__-vTslLtUYRqB3WRb22ku4"
+      ],
+      "golden_answer": "Следующие места в Москва наиболее подходят под запрос «Где попробовать современную русскую авторскую кухню с панорамным видом?». Вот почему: ..."
+    },
+    {
+      "query": "Где арендовать банкетный зал с парковкой в Москве?",
+      "locations": [
+        "ChIJ8YYpNipKtUYRHPcL-WaBilk",
+        "ChIJg9ntX3xKtUYRVlzQDtcwcS8",
+        "ChIJW-lvuvVKtUYRe8yZ1mpWbs0",
+        "ChIJt3A8GtxLtUYRuYFUSHAsuUk",
+        "ChIJ9drl0c9LtUYRqHbYk19ZwKY"
+      ],
+      "golden_answer": "Следующие места в Москва наиболее подходят под запрос «Где арендовать банкетный зал с парковкой в Москве?». Вот почему: ..."
+    },
+    {
+      "query": "Кафе с уникальным эко-интерьером в центре Москвы",
+      "locations": [
+        "ChIJEaqX9kNKtUYRQWitt2GjE6k",
+        "ChIJa_VO4k9KtUYR1duBWJW9K1k",
+        "ChIJUXSPFvhKtUYRuMA9FZhbLjw",
+        "ChIJ8R9Prla0SkERjbavViSc0Wg",
+        "ChIJlR__ZcyzSkERkf16mp9JYWI"
+      ],
+      "golden_answer": "Следующие места в Москва наиболее подходят под запрос «Кафе с уникальным эко-интерьером в центре Москвы». Вот почему: ..."
+    },
+    {
+      "query": "Где увидеть богатейшую коллекцию исторических артефактов?",
+      "locations": [
+        "ChIJBZbmYllKtUYR5TrL54oWz6Q",
+        "ChIJlR__ZcyzSkERkf16mp9JYWI",
+        "ChIJv0Ie-0RKtUYRt_LisqTEg0A",
+        "ChIJdW8ua2c2tUYRoWhqfBkSvZE",
+        "ChIJV4MHMv5KtUYRjwJ7motuDaU"
+      ],
+      "golden_answer": "Следующие места в Москва наиболее подходят под запрос «Где увидеть богатейшую коллекцию исторических артефактов?». Вот почему: ..."
+    }
+  ],
+  "Санкт-Петербург": [
+    {
+      "query": "Где поесть рядом со мной?",
+      "locations": [
+        "ChIJ33NHZHUxlkYRUAfFhOGS1E4",
+        "ChIJpzQPpBsxlkYRLYEBMPSvuxE",
+        "ChIJMz74aBwxlkYRnTNPiyadySE",
+        "ChIJq3iYOUMxlkYRXik9wpj40Xo",
+        "ChIJ6TByc3UxlkYR4QD7-Oga_3c"
+      ],
+      "golden_answer": "Следующие места в Санкт-Петербург наиболее подходят под запрос «Где поесть рядом со мной?». Вот почему: ..."
+    },
+    {
+      "query": "Где насладиться панорамными видами города в Санкт-Петербурге?",
+      "locations": [
+        "ChIJay1NNK8xlkYRaJd0N7f5m6I",
+        "ChIJ6eLLMgsxlkYRNASdAAWpsbw",
+        "ChIJKU15LUAxlkYRrErlIUAwd1k",
+        "ChIJ6eLLMgsxlkYR_F1QoCoDTgc",
+        "ChIJkXVtWxYxlkYRPfXefR3-1Ww"
+      ],
+      "golden_answer": "Следующие места в Санкт-Петербург наиболее подходят под запрос «Где насладиться панорамными видами города в Санкт-Петербурге?». Вот почему: ..."
+    },
+    {
+      "query": "Какой театр посетить в Санкт-Петербурге?",
+      "locations": [
+        "ChIJDYVFrAAxlkYR3pS-5ogQ-eg",
+        "ChIJVf1t4QgxlkYRT1slw4fwUyk",
+        "ChIJR1pQsh8xlkYRe05jdIhc1oI",
+        "ChIJ2YMZ2pUxlkYRDRmoW5PU7e0"
+      ],
+      "golden_answer": "Следующие места в Санкт-Петербург наиболее подходят под запрос «Какой театр посетить в Санкт-Петербурге?». Вот почему: ..."
+    },
+    {
+      "query": "Где увидеть шедевры русской живописи в Петербурге?",
+      "locations": [
+        "ChIJhWsRwA4xlkYRVVQ7duuOte0",
+        "ChIJkWMvDNEwlkYRO5hq8gYTkno",
+        "ChIJ_9FCMg8xlkYR3v3K-q4FuKs",
+        "ChIJU4e-bGYxlkYRmOn_hj38_AI",
+        "ChIJLVpHfgwxlkYRSKIBKxed6JA"
+      ],
+      "golden_answer": "Следующие места в Санкт-Петербург наиболее подходят под запрос «Где увидеть шедевры русской живописи в Петербурге?». Вот почему: ..."
+    }
+  ],
+  "Нижний Новгород": [
+    {
+      "query": "Где попробовать аутентичную грузинскую кухню в центре?",
+      "locations": [
+        "ChIJtZuSQwbVUUER6fitvnoCFq4",
+        "ChIJLe2tYN3VUUERf7_2wAMKfhM",
+        "ChIJY4ACqVbUUUER5PWEoxSJizw",
+        "ChIJ3ahPvUzUUUERvKZ1iSMGlVE",
+        "ChIJlw9TxE_UUUER5EeiRJ5iJns"
+      ],
+      "golden_answer": "Следующие места в Нижний Новгород наиболее подходят под запрос «Где попробовать аутентичную грузинскую кухню в центре?». Вот почему: ..."
+    },
+    {
+      "query": "Лучшие рестораны в Нижнем Новгороде?",
+      "locations": [
+        "ChIJ-X2Z_zbUUUERTLluOg-fijs",
+        "ChIJ88hpj1nVUUERy7KIjKYDhVE",
+        "ChIJm3Krl0_UUUERCYUzY5n3ODE",
+        "ChIJY7LSjjfUUUERBjrI6oAZPjA",
+        "ChIJN4Q7OkfUUUERl-ZUHgbcEGs"
+      ],
+      "golden_answer": "Следующие места в Нижний Новгород наиболее подходят под запрос «Лучшие рестораны в Нижнем Новгороде?». Вот почему: ..."
+    },
+    {
+      "query": "Где посмотреть крупнейшую музейную коллекцию области?",
+      "locations": [
+        "ChIJbU9D_EbUUUERr2jM6lhugWw",
+        "ChIJCXYumEHVUUER4Hc1UCGqk10",
+        "ChIJ32CTBkTUUUERc03bg2KPgnA",
+        "ChIJjfRkXCXVUUER8NBQz1UWA0o",
+        "ChIJn1Mqo0TUUUERKaC1JBthbW0"
+      ],
+      "golden_answer": "Следующие места в Нижний Новгород наиболее подходят под запрос «Где посмотреть крупнейшую музейную коллекцию области?». Вот почему: ..."
+    }
+  ],
+  "Казань": [
+    {
+      "query": "Где поесть с детьми в Казани?",
+      "locations": [
+        "ChIJq6yyTxetXkERCOZj_DluFGk",
+        "ChIJPZErQgitXkERuiHn4hax7B4",
+        "ChIJf0J4eQOtXkERnSoU_OOIxXE",
+        "ChIJp7SxsIytXkERX3QISB0kyAM",
+        "ChIJHQ3KxwStXkERsk9qVp4l1Yk"
+      ],
+      "golden_answer": "Следующие места в Казань наиболее подходят под запрос «Где поесть с детьми в Казани?». Вот почему: ..."
+    },
+    {
+      "query": "Лучшие рестораны в Казани?",
+      "locations": [
+        "ChIJyQq-9xitXkERs4AnNKUX0S8",
+        "ChIJQ0HMNRqtXkERHxgjFFfx48A",
+        "ChIJFS_BbxCtXkERwI5K-vOEuL0",
+        "ChIJIcTXowStXkERxvH5AgSAy0k",
+        "ChIJlZ6yC8qtXkERz1pVCnFhKm8"
+      ],
+      "golden_answer": "Следующие места в Казань наиболее подходят под запрос «Лучшие рестораны в Казани?». Вот почему: ..."
+    },
+    {
+      "query": "Какие достопримечательности стоит увидеть в Казани?",
+      "locations": [
+        "ChIJ79ugKQWtXkERK_wlyQlmE2I",
+        "ChIJSQ8KanGtXkERXvCf_ObJPfg",
+        "ChIJ-YB1KWRTWUERZg-ruLeBkVs",
+        "ChIJmcUVo6lSWUERSnSg7Uu-dmw",
+        "ChIJRRTccAWtXkEReDUiGKTdfoc"
+      ],
+      "golden_answer": "Следующие места в Казань наиболее подходят под запрос «Какие достопримечательности стоит увидеть в Казани?». Вот почему: ..."
+    },
+    {
+      "query": "Музей татарской деревни под открытым небом в Казани?",
+      "locations": [
+        "ChIJPZErQgitXkERuiHn4hax7B4",
+        "ChIJU65BmSGtXkERfc65lagmAVs",
+        "ChIJ-YB1KWRTWUERZg-ruLeBkVs",
+        "ChIJkS9_YxetXkERO7Gd4L7FDmc",
+        "ChIJ8XkJNFatXkERE2krZP3Fj6s"
+      ],
+      "golden_answer": "Следующие места в Казань наиболее подходят под запрос «Музей татарской деревни под открытым небом в Казани?». Вот почему: ..."
+    }
+  ],
+  "Томск": [
+    {
+      "query": "Где попробовать блюда из местных фермерских продуктов в Томске?",
+      "locations": [
+        "ChIJT5Jii2CTJkMRFXaN7rvcASc",
+        "ChIJ9bDtcZ2UJkMRxIIDX2WjUws",
+        "ChIJ8-2TrJrrJkMRvrWxKepaN4M",
+        "ChIJnUVrml-TJkMRyeJqPu4nc9g",
+        "ChIJuVp4HHSTJkMRDdQLEyd-lto"
+      ],
+      "golden_answer": "Следующие места в Томск наиболее подходят под запрос «Где попробовать блюда из местных фермерских продуктов в Томске?». Вот почему: ..."
+    },
+    {
+      "query": "Где посмотреть лучшие художественные экспозиции в Томске?",
+      "locations": [
+        "ChIJRxO2uVaTJkMRek1GME3-rnM",
+        "ChIJuVp4HHSTJkMRk2dXcXIVUYM",
+        "ChIJuVp4HHSTJkMR1ZeOntA2HLA",
+        "ChIJuVp4HHSTJkMRNaSBLqQ7Q8A",
+        "ChIJuVp4HHSTJkMRVD1-MzBsalU"
+      ],
+      "golden_answer": "Следующие места в Томск наиболее подходят под запрос «Где посмотреть лучшие художественные экспозиции в Томске?». Вот почему: ..."
+    }
+  ],
+  "Новосибирск": [
+    {
+      "query": "Где попробовать блюда сибирской кухни в Новосибирске?",
+      "locations": [
+        "ChIJp1ABLNHl30IRIOzBsnEqgC8",
+        "ChIJz-PQNy3k30IRGbpvSmBOKSo",
+        "ChIJUVVlKtHl30IR-B1m5SKhL74",
+        "ChIJW88mitbl30IRGdgA4wp6LSQ",
+        "ChIJ9yZy8dHl30IR8LVkBr-5xYQ"
+      ],
+      "golden_answer": "Следующие места в Новосибирск наиболее подходят под запрос «Где попробовать блюда сибирской кухни в Новосибирске?». Вот почему: ..."
+    },
+    {
+      "query": "Где посмотреть современное искусство в Новосибирске?",
+      "locations": [
+        "ChIJLV6xkc7l30IRNmCdBunSugk",
+        "ChIJPxV7h87l30IR8m-TtF5Rdm4",
+        "ChIJrUTrCy3k30IRNgaj64fFmrY",
+        "ChIJgS3LBHrm30IRYSZ25OyLkrA",
+        "ChIJU9saUc7l30IRxer6TXAvUQI"
+      ],
+      "golden_answer": "Следующие места в Новосибирск наиболее подходят под запрос «Где посмотреть современное искусство в Новосибирске?». Вот почему: ..."
+    },
+    {
+      "query": "Где посмотреть балет и оперу в Новосибирске?",
+      "locations": [
+        "ChIJIyrYW9Dl30IROQytFVyNXCk",
+        "ChIJMX1Ns8Xl30IRNb-xTDddJIE",
+        "ChIJ4TDKLi3k30IRGeTRn86YF8Y",
+        "ChIJVVEUZdnl30IRHgWpP3gC4mE",
+        "ChIJFS_dqGzm30IREYTH25My9vk"
+      ],
+      "golden_answer": "Следующие места в Новосибирск наиболее подходят под запрос «Где посмотреть балет и оперу в Новосибирске?». Вот почему: ..."
+    }
+  ]
+}
