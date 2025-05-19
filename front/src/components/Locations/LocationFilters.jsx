@@ -15,7 +15,8 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
   const [localFilters, setLocalFilters] = useState({
     city: currentFilters.city || '',
     types: currentFilters.types || [],
-    searchType: currentFilters.searchType || 'index' // Добавляем тип поиска, по умолчанию индексный
+    searchType: currentFilters.searchType || 'index', // Добавляем тип поиска, по умолчанию индексный
+    useLLM: currentFilters.useLLM || false,
   });
   
   // Загрузка городов и типов мест при монтировании компонента
@@ -53,7 +54,8 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
     setLocalFilters({
       city: currentFilters.city || '',
       types: currentFilters.types || [],
-      searchType: currentFilters.searchType || 'index'
+      searchType: currentFilters.searchType || 'index',
+      useLLM: currentFilters.useLLM || false,
     });
   }, [currentFilters]);
   
@@ -62,7 +64,8 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
     const newFilters = {
       city: localFilters.city || null,
       types: localFilters.types.length > 0 ? localFilters.types : null,
-      searchType: localFilters.searchType
+      searchType: localFilters.searchType,
+      useLLM: localFilters.useLLM,
     };
     onFilterChange(newFilters);
   }, [localFilters, onFilterChange]);
@@ -99,8 +102,8 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
   
   // Сброс всех фильтров
   const handleReset = () => {
-    setLocalFilters({ city: '', types: [], searchType: 'index' });
-    onFilterChange({ city: null, types: null, searchType: 'index' });
+    setLocalFilters({ city: '', types: [], searchType: 'index', useLLM: false });
+    onFilterChange({ city: null, types: null, searchType: 'index', useLLM: false });
   };
   
   if (loading) {
@@ -144,6 +147,19 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
             <span className="ml-2 text-xs text-gray-500">(Natural language understanding)</span>
           </label>
         </div>
+        {localFilters.searchType === 'semantic' && (
+          <div className="mt-2">
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                className="form-checkbox"
+                checked={localFilters.useLLM}
+                onChange={e => setLocalFilters(prev => ({ ...prev, useLLM: e.target.checked }))}
+              />
+              <span className="ml-2">Использовать LLM</span>
+            </label>
+          </div>
+        )}
       </div>
       
       {/* Фильтр по городу */}
@@ -207,12 +223,13 @@ LocationFilters.propTypes = {
   currentFilters: PropTypes.shape({
     city: PropTypes.string,
     types: PropTypes.arrayOf(PropTypes.string),
-    searchType: PropTypes.string
+    searchType: PropTypes.string,
+    useLLM: PropTypes.bool
   })
 };
 
 LocationFilters.defaultProps = {
-  currentFilters: { city: null, types: [], searchType: 'index' }
+  currentFilters: { city: null, types: [], searchType: 'index', useLLM: false }
 };
 
 export default LocationFilters; 

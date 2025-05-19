@@ -6,7 +6,7 @@ import LocationFilters from '../components/Locations/LocationFilters';
 import SearchBar from '../components/Locations/SearchBar';
 import Pagination from '../components/Common/Pagination';
 import locationsService from '../api/locationsService';
-import RagStreamingTest from '../components/RagStreamingTest';
+import RagChat from '../components/RagChat';
 
 /**
  * Страница списка локаций с фильтрами и пагинацией
@@ -34,6 +34,13 @@ const LocationsList = () => {
   
   const cityStr = city || '';
   const typesStr = types && types.length > 0 ? types.join(',') : '';
+  
+  const [currentFilters, setCurrentFilters] = useState({
+    city: city || '',
+    types: types || [],
+    searchType: searchType || 'index',
+    useLLM: false,
+  });
   
   // Мемоизированная функция запроса данных
   const fetchData = useCallback(async () => {
@@ -162,11 +169,9 @@ const LocationsList = () => {
 
   const handleFilterChange = (newFilters) => {
     const newParams = { page: '1' };
-    
     if (newFilters.city) {
       newParams.city = newFilters.city;
     }
-    
     if (newFilters.types && newFilters.types.length > 0) {
       newParams.types = newFilters.types.join(',');
     }
@@ -176,11 +181,15 @@ const LocationsList = () => {
     if (newFilters.searchType) {
       newParams.searchType = newFilters.searchType;
     }
-    console.log('[LocationsList] Setting new filters:', newParams);
+    setCurrentFilters({
+      city: newFilters.city || '',
+      types: newFilters.types || [],
+      searchType: newFilters.searchType || 'index',
+      useLLM: newFilters.useLLM || false,
+    });
     setSearchParams(newParams);
   };
   
-
   const handlePageChange = (newPage) => {
     const newParams = { ...Object.fromEntries(searchParams), page: newPage.toString() };
     setSearchParams(newParams);
@@ -220,7 +229,7 @@ const LocationsList = () => {
         <div className="lg:col-span-1">
           <LocationFilters 
             onFilterChange={handleFilterChange}
-            currentFilters={{ city, types: types || [], searchType }}
+            currentFilters={currentFilters}
           />
         </div>
         
@@ -229,10 +238,14 @@ const LocationsList = () => {
           {/* Поисковая строка */}
           <SearchBar onSearch={handleSearch} initialQuery={query} />
           {/* Стриминговый LLM компонент только для semantic search */}
-          {searchType === 'semantic' && (
-            <div className="mb-6">
-              <RagStreamingTest city={cityStr} types={typesStr} query={query} />
-            </div>
+          {currentFilters.useLLM && searchType === 'semantic' && (
+            <RagChat
+              key={`${query}|${cityStr}|${typesStr}|${searchType}|${currentFilters.useLLM}`}
+              city={cityStr}
+              types={typesStr}
+              query={query}
+              searchType={searchType}
+            />
           )}
           
           {/* Информация о результатах */}

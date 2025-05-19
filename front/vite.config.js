@@ -12,6 +12,8 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: '0.0.0.0',
+    allowedHosts: ['.loca.lt'],
     proxy: {
       '/api/v1/locations': {
         target: 'http://0.0.0.0:8000/api/v1/locations',
@@ -36,6 +38,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api\/v1\/semantic/, '')
+      },
+      '/api/v1/rag': {
+        target: 'http://0.0.0.0:8000/api/v1/rag',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/v1\/rag/, '')
       }
     }
   },
