@@ -139,22 +139,22 @@ export default function RagChat({ query = '', city = '', types = '', searchType 
   }
 
   return (
-    <div className="rounded-xl bg-white border border-blue-100 shadow-lg p-6 mt-4 transition-all">
-      <div className="flex items-center mb-3">
-        <span className="text-blue-600 font-bold text-lg mr-2">LLM Chat</span>
+    <div className="rounded-2xl bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-200 shadow-2xl p-8 mt-6 mb-8 transition-all animate-fade-in">
+      <div className="flex items-center mb-4">
+        <span className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-purple-600 to-pink-500 bg-clip-text text-transparent mr-3">LLM Chat</span>
         {loading && (
           <>
             <span className="ml-2">
-              <span className="inline-block w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin align-middle"></span>
+              <span className="inline-block w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin align-middle"></span>
             </span>
-            <button className="ml-auto btn btn-outline btn-xs" onClick={handleStop}>
+            <button className="ml-auto px-3 py-1 rounded-lg border border-yellow-300 bg-gradient-to-r from-white to-yellow-50 text-yellow-700 font-semibold shadow hover:bg-yellow-100 transition-all text-xs" onClick={handleStop}>
               Остановить
             </button>
           </>
         )}
       </div>
       {thinkingContent && (
-        <div className={`mb-3 p-4 rounded relative shadow-sm transition-all ${showThinking ? (thinkingFinished ? 'bg-gray-100 border-l-4 border-gray-300' : 'bg-yellow-50 border-l-4 border-yellow-400 animate-pulse') : 'bg-gray-50 border-l-4 border-gray-100'}`}>
+        <div className={`mb-4 p-4 rounded-xl relative shadow transition-all ${showThinking ? (thinkingFinished ? 'bg-gray-100 border-l-4 border-gray-300' : 'bg-yellow-50 border-l-4 border-yellow-400 animate-pulse') : 'bg-gray-50 border-l-4 border-gray-100'}`}>
           <div className="flex items-center justify-between mb-2">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 text-xs font-semibold shadow-sm">
               <span role="img" aria-label="think">💭</span>
@@ -183,7 +183,7 @@ export default function RagChat({ query = '', city = '', types = '', searchType 
           )}
         </div>
       )}
-      <div className="whitespace-pre-wrap bg-gray-50 p-4 rounded shadow-inner min-h-[60px] text-base text-gray-800 markdown-body">
+      <div className="whitespace-pre-wrap bg-gradient-to-r from-gray-50 via-white to-blue-50 p-5 rounded-xl shadow-inner min-h-[60px] text-base text-gray-800 markdown-body animate-fade-in">
         {mainContent
           ? <ReactMarkdown>{mainContent}</ReactMarkdown>
           : (loading ? <span className="text-gray-400">Генерация ответа...</span> : <span className="text-gray-400">Нет ответа</span>)}

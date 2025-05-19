@@ -224,16 +224,16 @@ const LocationsList = () => {
   
   return (
     <BaseLayout title="Locations">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="max-w-7xl mx-auto py-10 px-2 bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-3xl shadow-2xl animate-fade-in grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar with filters */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 animate-fade-in delay-100">
           <LocationFilters 
             onFilterChange={handleFilterChange}
             currentFilters={currentFilters}
           />
         </div>
         {/* Main content */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 animate-fade-in delay-200">
           {/* Search bar */}
           <SearchBar onSearch={handleSearch} initialQuery={query} />
           {/* LLM streaming component only for semantic search */}
@@ -247,7 +247,7 @@ const LocationsList = () => {
             />
           )}
           {/* Results info */}
-          <div className="mb-4 flex justify-between items-center">
+          <div className="mb-4 flex flex-col md:flex-row justify-between items-center gap-2">
             <h2 className="text-xl">
               {searchMode && query && (
                 <span>Search results for "{query}"</span>
@@ -268,12 +268,12 @@ const LocationsList = () => {
           {/* Loading indicator */}
           {loading && (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-blue-500"></div>
             </div>
           )}
           {/* Error message */}
           {error && !loading && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <div className="bg-gradient-to-r from-red-100 via-white to-red-50 border border-red-400 text-red-700 px-4 py-3 rounded-xl shadow mb-4 animate-fade-in">
               <p className="font-medium">Error: {error}</p>
               {query && (
                 <p className="mt-2 text-sm">
@@ -284,12 +284,12 @@ const LocationsList = () => {
           )}
           {/* Locations list */}
           {!loading && !error && locations.length === 0 ? (
-            <div className="text-center p-8 bg-gray-50 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-600 mb-2">No locations found</h3>
+            <div className="text-center p-8 bg-gradient-to-r from-gray-50 via-white to-blue-50 rounded-2xl shadow animate-fade-in">
+              <h3 className="text-lg font-semibold text-gray-600 mb-2">No locations found</h3>
               <p className="text-gray-500">Try changing your filters or search criteria.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {locations.map(location => (
                 <LocationCard key={location.doc_id} location={location} />
               ))}
@@ -297,8 +297,8 @@ const LocationsList = () => {
           )}
           {/* Active filters (for clarity) */}
           {(city || typesParam) && (
-            <div className="mt-4 p-2 bg-gray-50 rounded-md">
-              <h4 className="text-sm font-medium text-gray-700 mb-1">Active filters:</h4>
+            <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 via-white to-green-50 rounded-xl shadow animate-fade-in">
+              <h4 className="text-sm font-semibold text-gray-700 mb-1">Active filters:</h4>
               <div className="flex flex-wrap gap-2">
                 {city && (
                   <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">

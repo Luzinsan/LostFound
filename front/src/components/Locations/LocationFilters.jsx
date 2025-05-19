@@ -115,48 +115,51 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
   }
   
   return (
-    <div className="card p-4 mb-6">
-      <h3 className="text-lg font-semibold mb-4">Filters</h3>
+    <div className="card p-6 mb-6 rounded-2xl shadow-lg bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 animate-fade-in min-h-[420px]">
+      <h3 className="text-xl font-bold mb-4 text-blue-700 flex items-center gap-2">
+        <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1V4z" /></svg>
+        Filters
+      </h3>
       
       {/* Search Type selection */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Search Type</label>
         <div className="flex flex-col space-y-2">
-          <label className="inline-flex items-center">
+          <label className="inline-flex items-center cursor-pointer">
             <input
               type="radio"
-              className="form-radio"
+              className="form-radio accent-blue-600"
               name="searchType"
               value="index"
               checked={localFilters.searchType === 'index'}
               onChange={handleSearchTypeChange}
             />
-            <span className="ml-2">Index Search</span>
+            <span className="ml-2 font-medium">Index Search</span>
             <span className="ml-2 text-xs text-gray-500">(Keyword-based with TF-IDF ranking)</span>
           </label>
-          <label className="inline-flex items-center">
+          <label className="inline-flex items-center cursor-pointer">
             <input
               type="radio"
-              className="form-radio"
+              className="form-radio accent-purple-600"
               name="searchType"
               value="semantic"
               checked={localFilters.searchType === 'semantic'}
               onChange={handleSearchTypeChange}
             />
-            <span className="ml-2">Semantic Search</span>
+            <span className="ml-2 font-medium">Semantic Search</span>
             <span className="ml-2 text-xs text-gray-500">(Natural language understanding)</span>
           </label>
         </div>
         {localFilters.searchType === 'semantic' && (
           <div className="mt-2">
-            <label className="inline-flex items-center">
+            <label className="inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
-                className="form-checkbox"
+                className="form-checkbox accent-pink-500"
                 checked={localFilters.useLLM}
                 onChange={e => setLocalFilters(prev => ({ ...prev, useLLM: e.target.checked }))}
               />
-              <span className="ml-2">Use LLM</span>
+              <span className="ml-2 font-medium">Use LLM</span>
             </label>
           </div>
         )}
@@ -166,7 +169,7 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
         <select
-          className="input"
+          className="input rounded-lg border-blue-200 focus:ring-2 focus:ring-blue-400"
           value={localFilters.city || ''}
           onChange={handleCityChange}
         >
@@ -180,7 +183,7 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
       {/* Place Types filter */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Place Types</label>
-        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded-md">
+        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 border border-blue-100 rounded-lg bg-white/60">
           {placeTypes.map(type => (
             <div key={type} className="flex items-center">
               <input
@@ -188,7 +191,7 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
                 id={`type-${type}`}
                 checked={localFilters.types.includes(type)}
                 onChange={() => handleTypeChange(type)}
-                className="mr-1"
+                className="accent-blue-500 mr-1"
               />
               <label htmlFor={`type-${type}`} className="text-sm cursor-pointer">
                 {type}
@@ -199,19 +202,20 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
       </div>
       
       {/* Control buttons */}
-      <div className="flex space-x-2">
-        <button 
-          className="btn btn-primary flex-1"
+      <div className="flex justify-between items-center mt-6 gap-2">
+        <button
+          className="px-4 py-2 rounded-lg border border-blue-300 bg-gradient-to-r from-white to-blue-50 text-blue-700 font-semibold shadow hover:bg-blue-100 transition-all text-sm"
+          type="button"
+          onClick={handleReset}
+        >
+          Reset Filters
+        </button>
+        <button
+          className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold shadow hover:scale-105 hover:from-pink-500 hover:to-blue-500 transition-all text-sm"
+          type="button"
           onClick={applyFilters}
         >
           Apply Filters
-        </button>
-        
-        <button 
-          className="btn btn-outline flex-1"
-          onClick={handleReset}
-        >
-          Reset
         </button>
       </div>
     </div>

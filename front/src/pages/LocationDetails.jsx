@@ -294,21 +294,6 @@ const LocationDetails = () => {
               View on Google Maps
             </a>
           </div>
-          
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold mb-3">Telegram Bot</h2>
-            <p className="text-gray-600 mb-4">
-              Get more recommendations like this by using our Telegram bot. Share your interests and receive personalized travel suggestions.
-            </p>
-            <a 
-              href="https://t.me/LostAndFoundBot" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="btn btn-outline w-full text-center"
-            >
-              Open in Telegram
-            </a>
-          </div>
         </div>
       </div>
     </BaseLayout>

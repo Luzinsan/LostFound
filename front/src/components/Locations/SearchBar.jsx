@@ -22,7 +22,7 @@ const SearchBar = ({ onSearch, initialQuery = '' }) => {
   };
   
   return (
-    <form onSubmit={handleSubmit} className="relative mb-4">
+    <form onSubmit={handleSubmit} className="relative mb-6 animate-fade-in">
       <div className="relative">
         <input
           ref={inputRef}
@@ -30,7 +30,7 @@ const SearchBar = ({ onSearch, initialQuery = '' }) => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search for locations..."
-          className="input pr-10 w-full"
+          className="input pr-16 w-full rounded-xl border-blue-200 shadow focus:ring-2 focus:ring-blue-400 bg-gradient-to-r from-white via-blue-50 to-purple-50 transition-all"
           aria-label="Search locations"
         />
         
@@ -38,7 +38,7 @@ const SearchBar = ({ onSearch, initialQuery = '' }) => {
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-14 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             aria-label="Clear search"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -49,7 +49,7 @@ const SearchBar = ({ onSearch, initialQuery = '' }) => {
         
         <button
           type="submit"
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-600 hover:text-blue-800"
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-pink-500 hover:to-blue-500 rounded-full p-2 shadow-lg transition-all"
           aria-label="Submit search"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

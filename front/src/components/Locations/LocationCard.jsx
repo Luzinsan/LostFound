@@ -21,7 +21,7 @@ const LocationCard = ({ location }) => {
     
   return (
     <div 
-      className="card overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+      className="card overflow-hidden transition-transform hover:shadow-2xl hover:-translate-y-1 cursor-pointer rounded-2xl shadow-lg bg-gradient-to-br from-white via-blue-50 to-purple-50 border border-blue-100 animate-fade-in"
       onClick={handleCardClick}
     >
       {photoUrl && (
@@ -35,8 +35,8 @@ const LocationCard = ({ location }) => {
       )}
       
       <div className="p-5">
-        <h3 className="font-semibold text-lg">{location.name}</h3>
-        <p className="text-gray-500 text-sm mb-2">{location.city}</p>
+        <h3 className="font-extrabold text-xl mb-1 bg-gradient-to-r from-blue-700 via-purple-600 to-pink-500 bg-clip-text text-transparent">{location.name}</h3>
+        <p className="text-blue-600 text-sm mb-2 font-medium">{location.city}</p>
         
         {location.address && (
           <p className="text-gray-600 text-sm mb-3">
@@ -52,7 +52,7 @@ const LocationCard = ({ location }) => {
           {location.types?.map((tag) => (
             <span 
               key={tag} 
-              className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+              className="bg-gradient-to-r from-blue-100 via-white to-green-100 text-blue-800 text-xs px-2 py-1 rounded-full shadow"
             >
               {tag}
             </span>
