@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import BaseLayout from '../components/Layout/BaseLayout';
+import RagStreamingTest from '../components/RagStreamingTest';
 
 const Home = () => {
   return (
@@ -45,6 +46,11 @@ const Home = () => {
             <p className="text-gray-600">Travel with detailed information from trusted sources like Google Places and Wikipedia.</p>
           </div>
         </div>
+      </div>
+      {/* Тестовый компонент для стримингового RAG запроса */}
+      <div className="mt-12 p-6 card">
+        <h2 className="text-lg font-semibold mb-4">Тест RAG LLM Streaming</h2>
+        <RagStreamingTest />
       </div>
     </BaseLayout>
   );

@@ -6,6 +6,7 @@ import LocationFilters from '../components/Locations/LocationFilters';
 import SearchBar from '../components/Locations/SearchBar';
 import Pagination from '../components/Common/Pagination';
 import locationsService from '../api/locationsService';
+import RagStreamingTest from '../components/RagStreamingTest';
 
 /**
  * Страница списка локаций с фильтрами и пагинацией
@@ -28,8 +29,11 @@ const LocationsList = () => {
   const city = searchParams.get('city') || undefined;
   const typesParam = searchParams.get('types');
   const types = typesParam ? typesParam.split(',').filter(Boolean) : undefined;
-  const query = searchParams.get('query') || '';
+  const [query, setQuery] = useState(searchParams.get('query') || '');
   const searchType = searchParams.get('searchType') || 'index';
+  
+  const cityStr = city || '';
+  const typesStr = types && types.length > 0 ? types.join(',') : '';
   
   // Мемоизированная функция запроса данных
   const fetchData = useCallback(async () => {
@@ -136,6 +140,8 @@ const LocationsList = () => {
       searchType
     });
     
+    setQuery(searchParams.get('query') || '');
+    
     // Отменяем предыдущий запрос, если он еще не выполнен
     if (fetchTimerRef.current) {
       clearTimeout(fetchTimerRef.current);
@@ -182,39 +188,33 @@ const LocationsList = () => {
   
   // Обработчик поиска с сохранением выбранных фильтров
   const handleSearch = (searchQuery) => {
+    setQuery(searchQuery);
     // Создаем новый объект параметров, начиная с пустого
     const newParams = { page: '1' };
-    
-    // Явно проверяем и добавляем нужные параметры
-    
     // Добавляем поисковый запрос
     if (searchQuery && searchQuery.trim()) {
       newParams.query = searchQuery.trim();
     }
-    
     // Всегда сохраняем выбранный город, если он есть
     if (city) {
       newParams.city = city;
       console.log('[LocationsList] Preserving city in search:', city);
     }
-    
     // Всегда сохраняем выбранные типы мест, если они есть
     if (typesParam) {
       newParams.types = typesParam;
       console.log('[LocationsList] Preserving place types in search:', typesParam);
     }
-    
     // Сохраняем тип поиска
     if (searchType) {
       newParams.searchType = searchType;
     }
-    
     console.log('[LocationsList] Setting search params with filters:', newParams);
     setSearchParams(newParams);
   };
   
   return (
-    <BaseLayout title="Explore All Locations">
+    <BaseLayout title="Locations">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Боковая панель с фильтрами */}
         <div className="lg:col-span-1">
@@ -228,6 +228,12 @@ const LocationsList = () => {
         <div className="lg:col-span-3">
           {/* Поисковая строка */}
           <SearchBar onSearch={handleSearch} initialQuery={query} />
+          {/* Стриминговый LLM компонент только для semantic search */}
+          {searchType === 'semantic' && (
+            <div className="mb-6">
+              <RagStreamingTest city={cityStr} types={typesStr} query={query} />
+            </div>
+          )}
           
           {/* Информация о результатах */}
           <div className="mb-4 flex justify-between items-center">
