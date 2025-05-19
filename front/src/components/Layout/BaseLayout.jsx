@@ -60,9 +60,6 @@ const BaseLayout = ({ children, title = 'Lost&Found' }) => {
             </div>
             <div>
               <h3 className="text-lg font-semibold mb-3">Connect</h3>
-              <p className="text-sm text-gray-300 mb-2">
-                Find us on Telegram: @LostAndFoundBot
-              </p>
               <p className="text-sm text-gray-300">
                 &copy; {new Date().getFullYear()} Lost&Found. All rights reserved.
               </p>

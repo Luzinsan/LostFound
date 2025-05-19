@@ -118,7 +118,7 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
     <div className="card p-4 mb-6">
       <h3 className="text-lg font-semibold mb-4">Filters</h3>
       
-      {/* Выбор типа поиска */}
+      {/* Search Type selection */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Search Type</label>
         <div className="flex flex-col space-y-2">
@@ -156,13 +156,13 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
                 checked={localFilters.useLLM}
                 onChange={e => setLocalFilters(prev => ({ ...prev, useLLM: e.target.checked }))}
               />
-              <span className="ml-2">Использовать LLM</span>
+              <span className="ml-2">Use LLM</span>
             </label>
           </div>
         )}
       </div>
       
-      {/* Фильтр по городу */}
+      {/* City filter */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
         <select
@@ -177,7 +177,7 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
         </select>
       </div>
       
-      {/* Фильтр по типам мест */}
+      {/* Place Types filter */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Place Types</label>
         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-2 border border-gray-200 rounded-md">
@@ -198,7 +198,7 @@ const LocationFilters = ({ onFilterChange, currentFilters }) => {
         </div>
       </div>
       
-      {/* Кнопки управления */}
+      {/* Control buttons */}
       <div className="flex space-x-2">
         <button 
           className="btn btn-primary flex-1"

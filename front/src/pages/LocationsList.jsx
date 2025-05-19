@@ -225,19 +225,18 @@ const LocationsList = () => {
   return (
     <BaseLayout title="Locations">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Боковая панель с фильтрами */}
+        {/* Sidebar with filters */}
         <div className="lg:col-span-1">
           <LocationFilters 
             onFilterChange={handleFilterChange}
             currentFilters={currentFilters}
           />
         </div>
-        
-        {/* Основной контент */}
+        {/* Main content */}
         <div className="lg:col-span-3">
-          {/* Поисковая строка */}
+          {/* Search bar */}
           <SearchBar onSearch={handleSearch} initialQuery={query} />
-          {/* Стриминговый LLM компонент только для semantic search */}
+          {/* LLM streaming component only for semantic search */}
           {currentFilters.useLLM && searchType === 'semantic' && (
             <RagChat
               key={`${query}|${cityStr}|${typesStr}|${searchType}|${currentFilters.useLLM}`}
@@ -247,8 +246,7 @@ const LocationsList = () => {
               searchType={searchType}
             />
           )}
-          
-          {/* Информация о результатах */}
+          {/* Results info */}
           <div className="mb-4 flex justify-between items-center">
             <h2 className="text-xl">
               {searchMode && query && (
@@ -267,15 +265,13 @@ const LocationsList = () => {
               </div>
             )}
           </div>
-          
-          {/* Индикатор загрузки */}
+          {/* Loading indicator */}
           {loading && (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           )}
-          
-          {/* Сообщение об ошибке */}
+          {/* Error message */}
           {error && !loading && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
               <p className="font-medium">Error: {error}</p>
@@ -286,8 +282,7 @@ const LocationsList = () => {
               )}
             </div>
           )}
-          
-          {/* Список локаций */}
+          {/* Locations list */}
           {!loading && !error && locations.length === 0 ? (
             <div className="text-center p-8 bg-gray-50 rounded-lg">
               <h3 className="text-lg font-medium text-gray-600 mb-2">No locations found</h3>
@@ -300,8 +295,7 @@ const LocationsList = () => {
               ))}
             </div>
           )}
-          
-          {/* Активные фильтры (добавляем для наглядности) */}
+          {/* Active filters (for clarity) */}
           {(city || typesParam) && (
             <div className="mt-4 p-2 bg-gray-50 rounded-md">
               <h4 className="text-sm font-medium text-gray-700 mb-1">Active filters:</h4>
@@ -319,8 +313,7 @@ const LocationsList = () => {
               </div>
             </div>
           )}
-          
-          {/* Пагинация */}
+          {/* Pagination */}
           {!loading && !error && locations.length > 0 && !searchMode && (
             <Pagination
               currentPage={pagination.page}
