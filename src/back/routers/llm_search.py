@@ -52,8 +52,8 @@ async def rag_chat_completion(
     max_tokens: int = Form(default=2000, description="Maximum number of tokens to generate"),
     stream: bool = Form(default=False, description="Whether to stream the response"),
     city: Optional[str] = Form(default=None, description="City to search in"),
-    types: Optional[List[str]] = Form(default=None, description="Comma-separated list of place types"),
-    limit: int = Form(default=5, description="Maximum number of search results")
+    types: Optional[str] = Form(default=None, description="Comma-separated list of place types"),
+    limit: int = Form(default=100, description="Maximum number of search results")
 ):
     """
     RAG (Retrieval Augmented Generation) endpoint that enhances LLM responses 
@@ -68,8 +68,10 @@ async def rag_chat_completion(
     try:    
         if city == "":
             city = None
-        if len(types) == 1 and types[0] == "":
+        if types == "":
             types = None
+        else:
+            types = types.split(",")
         user_messages = [msg.content for msg in messages if msg.role == "user"]
         
         if not user_messages:

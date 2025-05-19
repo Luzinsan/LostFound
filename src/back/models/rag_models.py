@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
-LLM_MODEL = "Qwen/Qwen3-235B-A22B"
+LLM_MODEL = "deepseek-ai/DeepSeek-R1"
 
 class ChatMessage(BaseModel):
     """

@@ -63,7 +63,7 @@ async def search(
     query: str,
     cities: Optional[List[str]] = Query(None, description="Cities to search in. If not provided, searches in all cities. Can be a single city or multiple cities."),
     types: Optional[List[str]] = Query(None, description="Place types to filter by"),
-    limit: int = Query(10, ge=1, le=50, description="Number of results to return")
+    limit: int = Query(50, ge=1, le=50, description="Number of results to return")
 ) -> SearchResponse:
     """
     Search for places using inverted index.

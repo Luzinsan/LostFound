@@ -153,7 +153,7 @@ def build_all_indices_task(cities: Optional[List[str]] = None) -> dict:
 
 
 @app.task
-def search_index_task(city: str, query: str, limit: int = 10, types: Optional[List[str]] = None) -> dict:
+def search_index_task(city: str, query: str, limit: int = 30, types: Optional[List[str]] = None) -> dict:
     """
     Searches the inverted index for the given query within a specific city.
     Supports wildcard queries using the "*" character (e.g. "rest*" for restaurants).
