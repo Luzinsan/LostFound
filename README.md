@@ -1,143 +1,194 @@
 # Lost&Found
 
-**Lost&Found** is a Telegram-based travel discovery bot that leverages advanced natural language processing (NLP) and aggregated data from trusted sources like Google Places, Wikipedia, and OpenStreetMap to deliver personalized travel recommendations. Each recommendation is enriched with historical insights, cultural details, and media references, ensuring users receive a comprehensive and engaging travel planning experience.
+**Lost&Found** is a modern web application that leverages advanced natural language processing (NLP) and aggregated data from multiple sources to deliver personalized travel recommendations. The application combines structured data from Google Places API, comprehensive city information from Wikipedia, and additional details from web scraping to provide rich, contextual information about destinations. Each recommendation is enriched with historical insights, cultural details, and media references, ensuring users receive a comprehensive and engaging travel planning experience.
 
 ## Overview
 
-Travelers often struggle to find destinations that truly match their unique interests. Lost&Found addresses this challenge by combining user preferences with data-driven insights to offer tailored travel suggestions directly through Telegram. Whether you're seeking historic landmarks, scenic nature spots, or vibrant urban experiences, Lost&Found transforms travel planning into an informed and enjoyable journey.
+Travelers often struggle to find destinations that truly match their unique interests. Lost&Found addresses this challenge by combining user preferences with data-driven insights to offer tailored travel suggestions. Whether you're seeking historic landmarks, scenic nature spots, or vibrant urban experiences, Lost&Found transforms travel planning into an informed and enjoyable journey.
+
+## DEMO
+
+<p align="center">
+<img src="demo/home_page.png" width="800" />
+</p>
+
+<p align="center">
+<img src="demo/destinations_page.png" width="800" />
+</p>
+
+<p align="center">
+<img src="demo/city_detail_page.png" width="800" />
+</p>
+
+<p align="center">
+<img src="demo/index_search_filter.png" width="450" /> <img src="demo/semantic_search.png" width="450" /> <img src="demo/semantic_search_llm.png" width="450" />
+</p>
+
+
+<p align="center">
+<img src="demo/semantic_search_llm_response.png" width="800" />
+</p>
+
+<p align="center">
+<img src="demo/place_detailed.png" width="800" />
+</p>
+
+
 
 ## Key Features
 
-- **Personalized Recommendations:**  
-  Utilizes NLP and semantic search techniques to analyze user input and deliver destination suggestions that align with individual interests.
+- **Advanced Search Capabilities:**  
+  - Index Search: Fast keyword-based search using classic TF-IDF ranking
+  - Semantic Search: Natural language search powered by vector similarity
+  - LLM-powered explanations for semantic search results
+  - Optional LLM integration for enhanced result understanding
   
-- **Data Aggregation:**  
-  Integrates data from multiple reliable sources including Google Places, Wikipedia, and OpenStreetMap, ensuring accuracy and depth.
+- **Multi-Source Data Integration:**  
+  Combines data from multiple sources:
+  - Google Places API for detailed place information, photos, and reviews
+  - Wikipedia for comprehensive city descriptions and historical context
+  - Web scraping for additional up-to-date information from relevant websites
   
-- **Enriched Content:**  
-  Provides detailed information such as historical background, cultural context, and media references for each recommended location.
+- **Smart Filtering and Navigation:**  
+  - Dynamic city and place type filters from system data
+  - Interactive map visualization using Leaflet
+  - Pagination for efficient browsing of results
+  - Seamless integration between places and their cities
   
-- **User-Friendly Interface:**  
-  Operates seamlessly within Telegram, offering intuitive commands and a conversational interaction model.
+- **Rich Content Presentation:**  
+  - Detailed place information with:
+    - Ratings and user reviews with profile photos
+    - Price levels and business hours
+    - Address and location details
+    - Place categories and types
+  - City overviews with historical context
+  - Markdown-formatted descriptions and explanations
+  - Image galleries for visual exploration
+  - User review system with ratings and timestamps
 
 ## Technology Stack
 
-- **Backend:**  
-  Developed using FastAPI or Flask for robust API creation and efficient data handling.
+### Backend
+- **API Framework:**  
+  FastAPI for robust API creation and efficient data handling.
   
 - **Data Storage:**  
-  Utilizes PostgreSQL for structured data and Elasticsearch for high-performance full-text search capabilities.
+  MongoDB for structured data storage and Redis for caching and message broker.
   
 - **Natural Language Processing:**  
-  Implements libraries like spaCy, Transformers, and models such as BERT or Sentence-BERT for sentiment analysis and semantic search.
+  Implements advanced LLM integration through Chutes.ai API for query understanding and response generation.
   
-- **Telegram Bot Framework:**  
-  Built using python-telegram-bot or Aiogram, providing a reliable and interactive user interface.
+- **Task Queue:**  
+  Celery for handling asynchronous tasks and background processing.
+
+### Frontend
+- **Framework:**  
+  React 18 with React Router for client-side routing
+  
+- **Styling:**  
+  Tailwind CSS for modern, responsive design
+  
+- **Maps:**  
+  Leaflet with React-Leaflet for interactive maps
+  
+- **Build Tool:**  
+  Vite for fast development and optimized production builds
 
 ## Installation and Setup
 
 ### Prerequisites
 - Python 3.11 or higher
-- MongoDB ([Download & Install](https://www.mongodb.com/try/download/community))
-- Redis ([Windows Subsystem for Linux](https://redis.io/docs/getting-started/installation/install-redis-on-windows/) or [Windows](https://github.com/microsoftarchive/redis/releases))
+- Node.js 16 or higher
+- MongoDB
+- Redis
 - uv package manager (recommended) or pip
 
-### Windows Installation Guide
+### Backend Setup
 
-1. **Install Python**
-   - Download Python 3.11+ from [official website](https://www.python.org/downloads/)
-   - During installation, check "Add Python to PATH"
-   - Verify installation: `python --version`
-
-2. **Install MongoDB**
-   - Download MongoDB Community Server from [MongoDB website](https://www.mongodb.com/try/download/community)
-   - Follow the installation wizard
-   - Add MongoDB to PATH if not done automatically:
-     - Copy path (typically `C:\Program Files\MongoDB\Server\6.0\bin`)
-     - Add to System Environment Variables
-   - Create data directory: `mkdir C:\data\db`
-   - Start MongoDB: `mongod`
-
-3. **Install Redis**
-   Option 1 (Recommended) - Using WSL2:
-   ```powershell
-   # Install WSL2
-   wsl --install
-
-   # After restart, install Redis in WSL
-   wsl
-   sudo apt update
-   sudo apt install redis-server
-   sudo service redis-server start
-   ```
-
-   Option 2 - Windows Native:
-   - Download Redis for Windows from [Github](https://github.com/microsoftarchive/redis/releases)
-   - Extract to `C:\Redis`
-   - Start Redis: `C:\Redis\redis-server.exe`
-
-4. **Setup Project**
-   ```powershell
-   # Clone repository
-   git clone <repository-url>
-   cd LostFound
-
+1. **Install Dependencies**
+   ```bash
    # Install uv (recommended package manager)
    pip install uv
 
    # Create and activate virtual environment
    uv venv
-   .venv\Scripts\activate
+   source .venv/bin/activate  # Linux/Mac
+   # or
+   .venv\Scripts\activate  # Windows
 
    # Install dependencies
    uv sync
    ```
 
-5. **Configure Environment**
+2. **Configure Environment**
    Create `.env` file in project root:
    ```env
    GOOGLE_PLACES_API=your_google_places_api_key
-   OPENTRIPMAP_API_KEY=your_opentripmap_api_key
-   TELEGRAM_BOT_API=your_telegram_bot_api_key
-   CITIES=["Moscow", "Saint Petersburg"]
+   CHUTES_API_KEY=your_chutes_api_key
+   CHUTES_LLM_API_URL=https://llm.chutes.ai/v1/chat/completions
+   ```
+
+### Frontend Setup
+
+1. **Install Dependencies**
+   ```bash
+   cd front
+   npm install
    ```
 
 ### Running the Project
 
 1. **Start Services**
-   ```powershell
-   # Start MongoDB (in new terminal)
+   ```bash
+   # Start MongoDB
    mongod
 
-   # Start Redis (in new terminal)
-   # If using WSL:
-   wsl
-   sudo service redis-server start
-   # If using Windows Redis:
-   C:\Redis\redis-server.exe
+   # Start Redis
+   redis-server
    ```
 
-2. **Start Celery Workers**
-   ```powershell
-   # Activate virtual environment if not activated
-   .venv\Scripts\activate
-
+2. **Start Backend**
+   ```bash
    # Start Celery worker
-   uv run celery -A parsers.tasks worker --loglevel=info -E
+   cd ./src/core
+   ./run.sh
+
+   # In another terminal, start the FastAPI server
+   cd ./src/back/api
+   ./run_api.sh
    ```
 
-3. **Run the Application**
-   ```powershell
-   # In new terminal with activated venv
-   uv run main.py
+3. **Start Frontend**
+   ```bash
+   cd front
+   npm run dev
    ```
 
-### Troubleshooting
+## Project Structure
+
+```
+├── front/           # Frontend React application
+|   ├── src/        # React source code
+│   └── static/     # Static assets
+└── src/            # Backend Python application
+    ├── back/       # Backend API and models
+    │   ├── api/    # API endpoints
+    │   ├── models/ # Data models
+    │   └── routers/# API routers
+    ├── configs/    # Configuration files
+    ├── core/       # Core application logic
+    │   ├── llm/    # LLM integration
+    │   ├── indexing_search/  # Search indexing
+    │   ├── semantic_search/  # Semantic search implementation
+    │   └── parsers/# Data parsers
+    └── utils/      # Utility functions
+```
+
+## Troubleshooting
 
 1. **Redis Connection Issues**
    - Ensure Redis is running: `redis-cli ping` should return "PONG"
    - Check Redis port (default 6379) is not blocked by firewall
-   - If using WSL, ensure WSL service is running
 
 2. **MongoDB Connection Issues**
    - Verify MongoDB is running: `mongosh`
@@ -149,9 +200,13 @@ Travelers often struggle to find destinations that truly match their unique inte
    - Check Celery version compatibility with Python version
    - Try running with `--pool=solo` flag if getting worker errors
 
+4. **Frontend Development Issues**
+   - Clear node_modules and reinstall if dependencies are corrupted
+   - Check Vite configuration if build fails
+   - Ensure API URL is correctly configured in environment variables
+
 ### Notes
 
-- For production deployment, consider using Windows Services or similar for automatic service startup
 - Keep your API keys secure and never commit them to version control
 - Monitor the logs in `celery` and application output for potential issues
 - Consider using MongoDB Compass for database visualization and management
@@ -160,3 +215,14 @@ For more detailed information about the components:
 - [MongoDB Documentation](https://www.mongodb.com/docs/)
 - [Redis Documentation](https://redis.io/docs)
 - [Celery Documentation](https://docs.celeryq.dev/en/stable/index.html)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
+- [React Documentation](https://react.dev/)
+- [Vite Documentation](https://vitejs.dev/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+
+
+# Tunneling
+> lt --port 3000
+
+Show public ip address:
+> curl https://loca.lt/mytunnelpassword
