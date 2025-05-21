@@ -21,7 +21,7 @@ Travelers often struggle to find destinations that truly match their unique inte
 </p>
 
 <p align="center">
-<img src="demo/index_search_filter.png" width="450" /> <img src="demo/semantic_search.png" width="450" /> <img src="demo/semantic_search_llm.png" width="450" />
+<img src="demo/index_search_filter.png" width="800" /> <img src="demo/semantic_search.png" width="800" /> <img src="demo/semantic_search_llm.png" width="800" />
 </p>
 
 
